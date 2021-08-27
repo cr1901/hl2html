@@ -1,6 +1,8 @@
 mod parser;
 mod hotlist;
 
+use parser::{HotlistParser, parse_hotlist_from_file};
+
 fn main() {
-    println!("Hello, world!");
+    let foo = parse_hotlist_from_file("").unwrap();
 }
