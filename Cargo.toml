@@ -7,10 +7,13 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-pest = "2.1.2"
-pest_derive = "2.1.0"
+eyre = "0.6.5"
+lalrpop-util = "0.19.6"
+regex = "1"
 chrono = "0.4.10"
 uuid = "0.8.1"
 url = "2.1.0"
 version-compare = "0.0.10"
-failure = "0.1.6"
+
+[build-dependencies]
+lalrpop = "0.19.6"
