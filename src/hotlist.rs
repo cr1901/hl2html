@@ -9,8 +9,17 @@ use std::mem::replace;
 
 pub struct HotList<'a> {
     pub version : Version<'a>,
-    pub encoding : Encoding<'a>,
+    pub options : Options<'a>,
     pub entries : Vec<EntryKind>
+}
+
+pub struct Options<'a> {
+    pub encoding: Encoding<'a>
+}
+
+// For now, assign default values to omitted options. Last value in repeated list takes priority.
+pub enum SingleOp<'a> {
+    Encoding(Encoding<'a>)
 }
 
 pub enum Encoding<'a> {
