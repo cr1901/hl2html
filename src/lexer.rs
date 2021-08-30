@@ -10,25 +10,25 @@ pub type Spanned<Tok, Loc, Error> = Result<(Loc, Tok, Loc), Error>;
 #[derive(Copy, Clone, Debug)]
 pub enum Tok<'input> {
     // Literals
-    HotlistVersion,   // "Opera Hotlist version"
-    Options,          // "Options: "
-    Encoding,         // "encoding"
-    EncodingVersion,  // "version"
-    Utf8,             // "utf8"
-    Equal,            // "="
-    NoteHeader,       // "#NOTE"
-    Id,               // "ID"
-    UniqueId,         // "UNIQUEID"
-    Name,             // "NAME"
-    Url,              // "URL"
-    Created,          // "CREATED"
-    Comma,            // ","
+    HotlistVersion,  // "Opera Hotlist version"
+    Options,         // "Options: "
+    Encoding,        // "encoding"
+    EncodingVersion, // "version"
+    Utf8,            // "utf8"
+    Equal,           // "="
+    NoteHeader,      // "#NOTE"
+    Id,              // "ID"
+    UniqueId,        // "UNIQUEID"
+    Name,            // "NAME"
+    Url,             // "URL"
+    Created,         // "CREATED"
+    Comma,           // ","
 
     // Regex-based
     Version(&'input str),
     Timestamp,
     UrlBody,
-    NoteBody
+    NoteBody,
 }
 
 #[derive(Debug)]
@@ -42,7 +42,9 @@ pub struct Lexer<'input> {
 
 impl<'input> Lexer<'input> {
     pub fn new(input: &'input str) -> Self {
-        Lexer { chars: input.char_indices() }
+        Lexer {
+            chars: input.char_indices(),
+        }
     }
 }
 

@@ -1,6 +1,6 @@
-mod parser;
 mod ast;
 mod lexer;
+mod parser;
 
 use parser::parse_hotlist_from_file;
 

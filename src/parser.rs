@@ -1,14 +1,15 @@
 use crate::ast::*;
 
-use std::path::Path;
 use std::fs;
+use std::path::Path;
 
-#[macro_use] use lalrpop_util::lalrpop_mod;
+#[macro_use]
+use lalrpop_util::lalrpop_mod;
 lalrpop_mod!(pub hotlist); // synthesized by LALRPOP
 
 use eyre::Result;
 
-pub fn parse_hotlist_from_file<'a, T: AsRef<Path>>(filename : T) -> Result<HotList<'a>> {
+pub fn parse_hotlist_from_file<'a, T: AsRef<Path>>(filename: T) -> Result<HotList<'a>> {
     let hotlist = fs::read_to_string(filename)?;
     // let file = HotlistParser::parse(Rule::HOTLIST, &parser)?.next().unwrap();
 
@@ -27,15 +28,22 @@ mod tests {
     fn test_version() {
         let inp = "Opera Hotlist version 2.0";
         let lexer = lexer::Lexer::new(inp);
-        assert_eq!(hotlist::HotlistVersionParser::new().parse(inp, lexer).unwrap(), RefVersion::from("2.0").unwrap());
+        assert_eq!(
+            hotlist::HotlistVersionParser::new()
+                .parse(inp, lexer)
+                .unwrap(),
+            RefVersion::from("2.0").unwrap()
+        );
     }
 
     #[test]
     fn test_encoding() {
         let inp = "encoding = utf8, version=3";
         let lexer = lexer::Lexer::new(inp);
-        assert_eq!(hotlist::SingleOpParser::new().parse(inp, lexer).unwrap(),
-            ast::SingleOp::Encoding(ast::Encoding::Utf8(RefVersion::from("3.0").unwrap())));
+        assert_eq!(
+            hotlist::SingleOpParser::new().parse(inp, lexer).unwrap(),
+            ast::SingleOp::Encoding(ast::Encoding::Utf8(RefVersion::from("3.0").unwrap()))
+        );
     }
 
     #[test]
@@ -43,10 +51,13 @@ mod tests {
         let inp = "Options: encoding = utf8, version=3";
         let lexer = lexer::Lexer::new(inp);
         assert_eq!(
-            hotlist::HotlistOptionsParser::new().parse(inp, lexer).unwrap(),
+            hotlist::HotlistOptionsParser::new()
+                .parse(inp, lexer)
+                .unwrap(),
             ast::Options {
                 encoding: ast::Encoding::Utf8(RefVersion::from("3.0").unwrap())
-            });
+            }
+        );
     }
 
     #[test]
@@ -55,14 +66,17 @@ mod tests {
                    Options: encoding = utf8, version=3\n";
         let lexer = lexer::Lexer::new(inp);
         assert_eq!(
-            hotlist::HotlistHeaderParser::new().parse(inp, lexer).unwrap(),
+            hotlist::HotlistHeaderParser::new()
+                .parse(inp, lexer)
+                .unwrap(),
             ast::HotList {
                 version: RefVersion::from("2.0").unwrap(),
                 options: ast::Options {
                     encoding: ast::Encoding::Utf8(RefVersion::from("3.0").unwrap())
                 },
                 entries: Vec::<ast::EntryKind>::new()
-            });
+            }
+        );
     }
 }
 
