@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 eyre = "0.6.5"
 lalrpop-util = "0.19.6"
+lexgen = "0.4.0"
 regex = "1"
 chrono = "0.4.10"
 uuid = "0.8.1"

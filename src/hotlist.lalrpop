@@ -3,8 +3,9 @@ use std::str::FromStr;
 use version_compare::version::Version as RefVersion;
 
 use crate::ast;
+use crate::lexer;
 
-grammar;
+grammar<'input>(input: &'input str);
 
 pub HotlistHeader: ast::HotList<'input> = {
     <version:HotlistVersion> <options:HotlistOptions> => {
@@ -50,4 +51,32 @@ Encoding: ast::Encoding<'input> = {
 }
 
 //NoteBody_: () = <s:r"[^\n]*."> => unimplemented!();
-Version: RefVersion<'input> = <s:r"[0-9]+(\.[0-9])?[0-9]*"> => RefVersion::from(s).unwrap();
+Version: RefVersion<'input> = <s:LexerVersion> => RefVersion::from(s).unwrap();
+
+extern {
+    type Location = usize;
+    type Error = lexer::LexicalError;
+
+    enum lexer::Tok<'input> {
+        // Literals
+        "Opera Hotlist version" => lexer::Tok::HotlistVersion,
+        "Options:" => lexer::Tok::Options,
+        "encoding" => lexer::Tok::Encoding,
+        "version" => lexer::Tok::EncodingVersion,
+        "utf8" => lexer::Tok::Utf8,
+        "=" => lexer::Tok::Equal,
+        "#NOTE" => lexer::Tok::NoteHeader,
+        "ID" => lexer::Tok::Id,
+        "UNIQUEID" => lexer::Tok::UniqueId,
+        "NAME" => lexer::Tok::Name,
+        "URL" => lexer::Tok::Url,
+        "CREATED" => lexer::Tok::Created,
+        "," => lexer::Tok::Comma,
+
+        // Regex-based
+        LexerVersion => lexer::Tok::Version(<&'input str>),
+        // lexer::Timestamp,
+        // lexer::UrlBody,
+        NoteBody_ => lexer::Tok::NoteBody
+    }
+}

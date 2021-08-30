@@ -33,7 +33,7 @@ pub enum Encoding<'a> {
 #[derive(Debug, PartialEq)]
 pub enum EntryKind {
     Folder(Folder),
-    Notes(Vec<Note>)
+    Note(Note)
 }
 
 #[derive(Debug, PartialEq)]
