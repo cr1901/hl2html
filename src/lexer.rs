@@ -1,12 +1,9 @@
-use std::str::CharIndices;
 use lexgen::lexer;
 
 // It's unfortunate, but the lexer has to do a bit of it's own parsing to successfully parse
 // notes, since the value of NAME can be essentially "anything except a newline". By default,
 // the lexer tries to match the longest option, and that would basically mean "everything is a
 // NameBody".
-
-pub type Spanned<Tok, Loc, Error> = Result<(Loc, Tok, Loc), Error>;
 
 #[derive(Copy, Clone, Debug)]
 pub enum Tok<'input> {

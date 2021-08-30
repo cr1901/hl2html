@@ -3,7 +3,6 @@ use crate::ast::*;
 use std::fs;
 use std::path::Path;
 
-#[macro_use]
 use lalrpop_util::lalrpop_mod;
 lalrpop_mod!(pub hotlist); // synthesized by LALRPOP
 

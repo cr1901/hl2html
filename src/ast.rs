@@ -3,10 +3,6 @@ use url::Url;
 use uuid::Uuid;
 use version_compare::version::Version;
 
-use std::convert::TryFrom;
-use std::mem::replace;
-use std::ops::Deref;
-
 #[derive(Debug, PartialEq)]
 pub struct HotList<'a> {
     pub version: Version<'a>,
