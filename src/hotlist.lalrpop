@@ -55,7 +55,7 @@ Version: RefVersion<'input> = <s:LexerVersion> => RefVersion::from(s).unwrap();
 
 extern {
     type Location = usize;
-    type Error = lexer::LexicalError;
+    type Error = lexer::LexerError;
 
     enum lexer::Tok<'input> {
         // Literals
