@@ -24,17 +24,24 @@ pub enum Tok<'input> {
 
     // Regex-based
     Version(&'input str),
-    Timestamp,
-    UrlBody,
-    NoteBody,
+    Integer(&'input str),
+    Uuid(&'input str),
+    UrlBody(&'input str),
+    NoteBody(&'input str),
 }
 
 lexer! {
     pub Lexer -> Tok<'input>;
 
     let version_re = ['0'-'9']+ ('.'['0'-'9'])? ['0'-'9']*;
+    let integer_re = ['0'-'9']*;
+    let uuid_re = ['0'-'9' 'A'-'F']*;
+    // Avoid conflicts with literals like "utf8," by only parsing a subset of valid URLs.
+    let url_re = ("http" | "https") ($$ascii_alphanumeric | ":" | "/" | "." | "-" | "~" | "_" | "#" | "$" | "," |
+        ";" | "(" | ")" | "'" | "?" | "[" | "]" | "@" | "!" | "&" | "*" | "+" | "=" |
+        ("%" ['0'-'9' 'A'-'F'] ['0'-'9' 'A'-'F']))+;
 
-    // Rule for everything except slurping up note body.
+    // Rule for everything except slurping up note body and URLs.
     rule Init {
         // Whitespace should be skipped when possible.
         [' ' '\t' '\n']+,
@@ -95,6 +102,21 @@ lexer! {
         $version_re => |lexer| {
             let match_ = lexer.match_();
             lexer.return_(Tok::Version(match_))
+        },
+
+        $integer_re => |lexer| {
+            let match_ = lexer.match_();
+            lexer.return_(Tok::Integer(match_))
+        },
+
+        $uuid_re => |lexer| {
+            let match_ = lexer.match_();
+            lexer.return_(Tok::Uuid(match_))
+        },
+
+        $url_re => |lexer| {
+            let match_ = lexer.match_();
+            lexer.return_(Tok::UrlBody(match_))
         },
     }
 }

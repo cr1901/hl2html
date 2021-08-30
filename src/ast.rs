@@ -7,7 +7,7 @@ use version_compare::version::Version;
 pub struct HotList<'a> {
     pub version: Version<'a>,
     pub options: Options<'a>,
-    pub entries: Vec<EntryKind>,
+    pub entries: Vec<EntryKind<'a>>,
 }
 
 #[derive(Debug, Default, PartialEq)]
@@ -27,26 +27,27 @@ pub enum Encoding<'a> {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum EntryKind {
-    Folder(Folder),
-    Note(Note),
+pub enum EntryKind<'a> {
+    Folder(Folder<'a>),
+    Note(Note<'a>),
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Folder {
+pub struct Folder<'a> {
     pub id: u32,
     pub uuid: Uuid,
     pub name: String,
     pub timestamp: DateTime<Utc>,
-    pub notes: Vec<Note>,
+    pub notes: Vec<Note<'a>>,
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Note {
+pub struct Note<'a> {
     pub id: u32,
     pub uuid: Uuid,
-    pub contents: String,
+    pub contents: &'a str,
     pub url: Url,
+    pub timestamp: DateTime<Utc>,
 }
 
 impl<'a> Default for Encoding<'a> {

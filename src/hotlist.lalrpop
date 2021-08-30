@@ -51,7 +51,7 @@ Encoding: ast::Encoding<'input> = {
 }
 
 //NoteBody_: () = <s:r"[^\n]*."> => unimplemented!();
-Version: RefVersion<'input> = <s:LexerVersion> => RefVersion::from(s).unwrap();
+Version: RefVersion<'input> = <s:Version_> => RefVersion::from(s).unwrap();
 
 extern {
     type Location = usize;
@@ -74,9 +74,10 @@ extern {
         "," => lexer::Tok::Comma,
 
         // Regex-based
-        LexerVersion => lexer::Tok::Version(<&'input str>),
-        // lexer::Timestamp,
-        // lexer::UrlBody,
-        NoteBody_ => lexer::Tok::NoteBody
+        Version_ => lexer::Tok::Version(<&'input str>),
+        Integer_ => lexer::Tok::Integer(<&'input str>),
+        // Uuid_ => lexer::Tok::Uuid(<&'input str>),
+        // UrlBody_ => lexer::Tok::UrlBody(<&'input str>),
+        NoteBody_ => lexer::Tok::NoteBody(<&'input str>),
     }
 }
