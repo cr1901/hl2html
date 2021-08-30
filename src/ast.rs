@@ -7,6 +7,7 @@ use std::ops::Deref;
 use std::convert::TryFrom;
 use std::mem::replace;
 
+#[derive(Debug, PartialEq)]
 pub struct HotList<'a> {
     pub version : Version<'a>,
     pub options : Options<'a>,
@@ -29,11 +30,13 @@ pub enum Encoding<'a> {
     Utf8(Version<'a>)
 }
 
+#[derive(Debug, PartialEq)]
 pub enum EntryKind {
     Folder(Folder),
     Notes(Vec<Note>)
 }
 
+#[derive(Debug, PartialEq)]
 pub struct Folder {
     pub id : u32,
     pub uuid : Uuid,
@@ -42,6 +45,7 @@ pub struct Folder {
     pub notes : Vec<Note>
 }
 
+#[derive(Debug, PartialEq)]
 pub struct Note {
     pub id : u32,
     pub uuid : Uuid,

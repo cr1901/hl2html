@@ -45,9 +45,14 @@ mod tests {
     #[test]
     fn test_header() {
         assert_eq!(
-            hotlist::HotlistOptionsParser::new().parse("Options: encoding = utf8, version=3").unwrap(),
-            ast::Options {
-                encoding: ast::Encoding::Utf8(RefVersion::from("3.0").unwrap())
+            hotlist::HotlistHeaderParser::new().parse("Opera Hotlist version 2.0\n\
+                                                       Options: encoding = utf8, version=3\n").unwrap(),
+            ast::HotList {
+                version: RefVersion::from("2.0").unwrap(),
+                options: ast::Options {
+                    encoding: ast::Encoding::Utf8(RefVersion::from("3.0").unwrap())
+                },
+                entries: Vec::<ast::EntryKind>::new()
             });
     }
 }

@@ -6,6 +6,16 @@ use crate::ast;
 
 grammar;
 
+pub HotlistHeader: ast::HotList<'input> = {
+    <version:HotlistVersion> <options:HotlistOptions> => {
+        ast::HotList {
+            version,
+            options,
+            entries: Vec::<ast::EntryKind>::new()
+        }
+    }
+}
+
 pub HotlistVersion: RefVersion<'input> = {
     "Opera Hotlist version" <v:Version> => v
 };
