@@ -1,4 +1,4 @@
-use crate::hotlist::*;
+use crate::ast::*;
 
 use std::path::Path;
 use std::fs;
@@ -19,7 +19,7 @@ pub fn parse_hotlist_from_file<'a, T: AsRef<Path>>(filename : T) -> Result<HotLi
 #[cfg(test)]
 mod tests {
     use super::hotlist;
-    use crate::hotlist as hlstruct;
+    use crate::ast;
     use version_compare::version::Version as RefVersion;
 
     #[test]
@@ -30,15 +30,15 @@ mod tests {
     #[test]
     fn test_encoding() {
         assert_eq!(hotlist::SingleOpParser::new().parse("encoding = utf8, version=3").unwrap(),
-            hlstruct::SingleOp::Encoding(hlstruct::Encoding::Utf8(RefVersion::from("3.0").unwrap())));
+            ast::SingleOp::Encoding(ast::Encoding::Utf8(RefVersion::from("3.0").unwrap())));
     }
 
     #[test]
     fn test_options() {
         assert_eq!(
             hotlist::HotlistOptionsParser::new().parse("Options: encoding = utf8, version=3").unwrap(),
-            hlstruct::Options {
-                encoding: hlstruct::Encoding::Utf8(RefVersion::from("3.0").unwrap())
+            ast::Options {
+                encoding: ast::Encoding::Utf8(RefVersion::from("3.0").unwrap())
             });
     }
 
@@ -46,8 +46,8 @@ mod tests {
     fn test_header() {
         assert_eq!(
             hotlist::HotlistOptionsParser::new().parse("Options: encoding = utf8, version=3").unwrap(),
-            hlstruct::Options {
-                encoding: hlstruct::Encoding::Utf8(RefVersion::from("3.0").unwrap())
+            ast::Options {
+                encoding: ast::Encoding::Utf8(RefVersion::from("3.0").unwrap())
             });
     }
 }

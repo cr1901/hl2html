@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use version_compare::version::Version as RefVersion;
 
-use crate::hotlist as hlstruct;
+use crate::ast;
 
 grammar;
 
@@ -10,13 +10,13 @@ pub HotlistVersion: RefVersion<'input> = {
     "Opera Hotlist version" <v:Version> => v
 };
 
-pub HotlistOptions: hlstruct::Options<'input> = {
+pub HotlistOptions: ast::Options<'input> = {
     "Options:" <mut vo:SingleOp*> => {
-        let mut ops = hlstruct::Options::<'input>::default();
+        let mut ops = ast::Options::<'input>::default();
 
         for o in vo {
             match o {
-                hlstruct::SingleOp::Encoding(encv) => {
+                ast::SingleOp::Encoding(encv) => {
                     ops.encoding = encv;
                 }
             }
@@ -26,17 +26,17 @@ pub HotlistOptions: hlstruct::Options<'input> = {
     }
 };
 
-pub SingleOp: hlstruct::SingleOp<'input> = {
+pub SingleOp: ast::SingleOp<'input> = {
     "encoding" "=" <enc:Encoding> "," "version" "=" <v:Version> => {
         let encv = match enc {
-            hlstruct::Encoding::Utf8(_) => hlstruct::Encoding::Utf8(v)
+            ast::Encoding::Utf8(_) => ast::Encoding::Utf8(v)
         };
-        hlstruct::SingleOp::Encoding(encv)
+        ast::SingleOp::Encoding(encv)
     },
 }
 
-Encoding: hlstruct::Encoding<'input> = {
-    "utf8" => hlstruct::Encoding::Utf8(RefVersion::from("0.0").unwrap())
+Encoding: ast::Encoding<'input> = {
+    "utf8" => ast::Encoding::Utf8(RefVersion::from("0.0").unwrap())
 }
 
 //NoteBody_: () = <s:r"[^\n]*."> => unimplemented!();
