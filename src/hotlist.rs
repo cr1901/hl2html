@@ -13,15 +13,18 @@ pub struct HotList<'a> {
     pub entries : Vec<EntryKind>
 }
 
+#[derive(Debug, Default, PartialEq)]
 pub struct Options<'a> {
     pub encoding: Encoding<'a>
 }
 
 // For now, assign default values to omitted options. Last value in repeated list takes priority.
+#[derive(Debug, PartialEq)]
 pub enum SingleOp<'a> {
     Encoding(Encoding<'a>)
 }
 
+#[derive(Debug, PartialEq)]
 pub enum Encoding<'a> {
     Utf8(Version<'a>)
 }
@@ -44,4 +47,10 @@ pub struct Note {
     pub uuid : Uuid,
     pub contents : String,
     pub url : Url
+}
+
+impl<'a> Default for Encoding<'a> {
+    fn default() -> Self {
+        Encoding::Utf8(Version::from("0.0").unwrap())
+    }
 }

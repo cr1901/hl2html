@@ -6,17 +6,38 @@ use crate::hotlist as hlstruct;
 
 grammar;
 
-pub HotlistHeader: RefVersion<'input> = {
+pub HotlistVersion: RefVersion<'input> = {
     "Opera Hotlist version" <v:Version> => v
 };
 
 pub HotlistOptions: hlstruct::Options<'input> = {
-    "Options:" <mut vo:SingleOp> => unimplemented!()
+    "Options:" <mut vo:SingleOp*> => {
+        let mut ops = hlstruct::Options::<'input>::default();
+
+        for o in vo {
+            match o {
+                hlstruct::SingleOp::Encoding(encv) => {
+                    ops.encoding = encv;
+                }
+            }
+        }
+
+        ops
+    }
 };
 
-SingleOp: hlstruct::SingleOp<'input> = {
-    "encoding" "=" <enc:Encoding> "," "version" "=" <v:Version> => unimplemented!()
+pub SingleOp: hlstruct::SingleOp<'input> = {
+    "encoding" "=" <enc:Encoding> "," "version" "=" <v:Version> => {
+        let encv = match enc {
+            hlstruct::Encoding::Utf8(_) => hlstruct::Encoding::Utf8(v)
+        };
+        hlstruct::SingleOp::Encoding(encv)
+    },
 }
 
-Encoding: hlstruct::Encoding<'input> = <s:r"[A-z]*."> => unimplemented!();
-Version: RefVersion<'input> = <s:r"[0-9]+.[0-9]+"> => RefVersion::from(s).unwrap();
+Encoding: hlstruct::Encoding<'input> = {
+    "utf8" => hlstruct::Encoding::Utf8(RefVersion::from("0.0").unwrap())
+}
+
+//NoteBody_: () = <s:r"[^\n]*."> => unimplemented!();
+Version: RefVersion<'input> = <s:r"[0-9]+(\.[0-9])?[0-9]*"> => RefVersion::from(s).unwrap();
