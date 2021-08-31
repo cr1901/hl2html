@@ -37,7 +37,7 @@ pub HotlistOptions: ast::Options<'input> = {
     }
 };
 
-pub SingleOp: ast::SingleOp<'input> = {
+pub(crate) SingleOp: ast::SingleOp<'input> = {
     "encoding" "=" <enc:Encoding> "," "version" "=" <v:Version> => {
         let encv = match enc {
             ast::Encoding::Utf8(_) => ast::Encoding::Utf8(v)
@@ -50,8 +50,12 @@ Encoding: ast::Encoding<'input> = {
     "utf8" => ast::Encoding::Utf8(RefVersion::from("0.0").unwrap())
 }
 
+Version: RefVersion<'input> = {
+    <s:Version_> => RefVersion::from(s).unwrap(),
+    <s:Integer_> => RefVersion::from(s).unwrap()
+}
+
 //NoteBody_: () = <s:r"[^\n]*."> => unimplemented!();
-Version: RefVersion<'input> = <s:Version_> => RefVersion::from(s).unwrap();
 
 extern {
     type Location = usize;

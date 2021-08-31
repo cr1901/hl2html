@@ -16,8 +16,7 @@ pub struct Options<'a> {
 }
 
 // For now, assign default values to omitted options. Last value in repeated list takes priority.
-#[derive(Debug, PartialEq)]
-pub enum SingleOp<'a> {
+pub(crate) enum SingleOp<'a> {
     Encoding(Encoding<'a>),
 }
 

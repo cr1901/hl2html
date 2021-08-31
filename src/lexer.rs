@@ -2,8 +2,8 @@ use lexgen::lexer;
 
 // It's unfortunate, but the lexer has to do a bit of it's own parsing to successfully parse
 // notes, since the value of NAME can be essentially "anything except a newline". By default,
-// the lexer tries to match the longest option, and that would basically mean "everything is a
-// NameBody".
+// the LALRPOP lexer tries to match the longest option, and that would basically mean "everything
+// is a NameBody".
 
 #[derive(Copy, Clone, Debug)]
 pub enum Tok<'input> {
