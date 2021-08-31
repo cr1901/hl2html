@@ -76,12 +76,18 @@ extern {
         "URL" => lexer::Tok::Url,
         "CREATED" => lexer::Tok::Created,
         "," => lexer::Tok::Comma,
+        "EXPANDED" => lexer::Tok::Expanded,
+        "TRASH FOLDER"  => lexer::Tok::TrashFolder,
+        "YES"  => lexer::Tok::Yes,
+        "NO" => lexer::Tok::No,
+        "FOLDER" => lexer::Tok::Folder,
+        "-" => lexer::Tok::FolderEnd,
 
         // Regex-based
         Version_ => lexer::Tok::Version(<&'input str>),
         Integer_ => lexer::Tok::Integer(<&'input str>),
-        // Uuid_ => lexer::Tok::Uuid(<&'input str>),
-        // UrlBody_ => lexer::Tok::UrlBody(<&'input str>),
+        Uuid_ => lexer::Tok::Uuid(<&'input str>),
+        UrlBody_ => lexer::Tok::UrlBody(<&'input str>),
         NoteBody_ => lexer::Tok::NoteBody(<&'input str>),
     }
 }

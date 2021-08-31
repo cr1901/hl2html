@@ -21,6 +21,12 @@ pub enum Tok<'input> {
     Url,             // "URL"
     Created,         // "CREATED"
     Comma,           // ","
+    Expanded,        // "EXPANDED"
+    TrashFolder,     // "TRASH FOLDER"
+    Yes,             // "YES"
+    No,              // "NO"
+    Folder,          // "FOLDER"
+    FolderEnd,       // "-"
 
     // Regex-based
     Version(&'input str),
@@ -30,8 +36,13 @@ pub enum Tok<'input> {
     NoteBody(&'input str),
 }
 
+#[derive(Default)]
+pub struct LexerState {
+    in_note_name: bool,
+}
+
 lexer! {
-    pub Lexer -> Tok<'input>;
+    pub Lexer(LexerState) -> Tok<'input>;
 
     let version_re = ['0'-'9']+ ('.'['0'-'9'])? ['0'-'9']*;
     let integer_re = ['0'-'9']*;
@@ -66,8 +77,12 @@ lexer! {
             lexer.return_(Tok::Utf8)
         },
 
-        "=" => |lexer| {
-            lexer.return_(Tok::Equal)
+        "=" => |mut lexer| {
+            if lexer.state().in_note_name {
+                lexer.switch_and_return(LexerRule::NoteBody, Tok::Equal)
+            } else {
+                lexer.return_(Tok::Equal)
+            }
         },
 
         "#NOTE" => |lexer| {
@@ -82,7 +97,8 @@ lexer! {
              lexer.return_(Tok::UniqueId)
         },
 
-        "NAME" => |lexer| {
+        "NAME" => |mut lexer| {
+             lexer.state().in_note_name = true;
              lexer.return_(Tok::Name)
         },
 
@@ -96,6 +112,30 @@ lexer! {
 
         "," => |lexer| {
              lexer.return_(Tok::Comma)
+        },
+
+        "EXPANDED" => |lexer| {
+             lexer.return_(Tok::Expanded)
+        },
+
+        "TRASH FOLDER"  => |lexer| {
+             lexer.return_(Tok::TrashFolder)
+        },
+
+        "YES"  => |lexer| {
+             lexer.return_(Tok::Yes)
+        },
+
+        "NO" => |lexer| {
+             lexer.return_(Tok::No)
+        },
+
+        "FOLDER" => |lexer| {
+            lexer.return_(Tok::Folder)
+        },
+
+        "-" => |lexer| {
+            lexer.return_(Tok::FolderEnd)
         },
 
         // Regexes
@@ -117,6 +157,19 @@ lexer! {
         $url_re => |lexer| {
             let match_ = lexer.match_();
             lexer.return_(Tok::UrlBody(match_))
+        },
+    }
+
+    // Chomp characters until a newline is found!
+    rule NoteBody {
+        _ => |mut lexer| {
+            if let Some('\n') = lexer.peek() {
+                let match_ = lexer.match_();
+                lexer.state().in_note_name = false;
+                lexer.switch_and_return(LexerRule::Init, Tok::NoteBody(match_))
+            } else {
+                lexer.continue_()
+            }
         },
     }
 }

@@ -16,6 +16,7 @@ pub struct Options<'a> {
 }
 
 // For now, assign default values to omitted options. Last value in repeated list takes priority.
+#[derive(Debug, PartialEq)]
 pub(crate) enum SingleOp<'a> {
     Encoding(Encoding<'a>),
 }
@@ -35,9 +36,11 @@ pub enum EntryKind<'a> {
 pub struct Folder<'a> {
     pub id: u32,
     pub uuid: Uuid,
-    pub name: String,
+    pub name: &'a str,
     pub timestamp: DateTime<Utc>,
-    pub notes: Vec<Note<'a>>,
+    pub trash: bool,
+    pub expanded: bool,
+    pub entries: Vec<EntryKind<'a>>,
 }
 
 #[derive(Debug, PartialEq)]
