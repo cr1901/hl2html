@@ -1,11 +1,13 @@
 use lexgen::lexer;
 
+use crate::ast;
+
 // It's unfortunate, but the lexer has to do a bit of it's own parsing to successfully parse
 // notes, since the value of NAME can be essentially "anything except a newline". By default,
 // the LALRPOP lexer tries to match the longest option, and that would basically mean "everything
 // is a NameBody".
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Tok<'input> {
     // Literals
     HotlistVersion,  // "Opera Hotlist version"
@@ -43,6 +45,7 @@ pub struct LexerState {
 
 lexer! {
     pub Lexer(LexerState) -> Tok<'input>;
+    type Error<'input> = ast::HotlistError<'input>;
 
     let version_re = ['0'-'9']+ ('.'['0'-'9'])? ['0'-'9']*;
     let integer_re = ['0'-'9']*;

@@ -10,7 +10,7 @@ pub struct HotList<'a> {
     pub entries: Vec<EntryKind<'a>>,
 }
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct Options<'a> {
     pub encoding: Encoding<'a>,
 }
@@ -52,8 +52,10 @@ pub struct Note<'a> {
     pub timestamp: DateTime<Utc>,
 }
 
-impl<'a> Default for Encoding<'a> {
-    fn default() -> Self {
-        Encoding::Utf8(Version::from("0.0").unwrap())
-    }
+// TODO: impl Display.
+// We squirrel this away in LexerError's UserError variant, because LexerError is already
+// associated with the ParseError::User variant.
+#[derive(Debug, PartialEq, Eq)]
+pub enum HotlistError<'a> {
+    RequiredFieldMissing(&'a str),
 }

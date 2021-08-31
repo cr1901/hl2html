@@ -21,6 +21,8 @@ mod tests {
     use super::hotlist;
     use crate::ast;
     use crate::lexer;
+
+    use lalrpop_util::ParseError;
     use version_compare::version::Version as RefVersion;
 
     #[test]
@@ -55,6 +57,20 @@ mod tests {
                 .unwrap(),
             ast::Options {
                 encoding: ast::Encoding::Utf8(RefVersion::from("3.0").unwrap())
+            }
+        );
+    }
+
+    #[test]
+    fn test_options_missing() {
+        let inp = "Options:";
+        let lexer = lexer::Lexer::new(inp);
+        assert_eq!(
+            hotlist::HotlistOptionsParser::new()
+                .parse(inp, lexer)
+                .unwrap_err(),
+            ParseError::User {
+                error: lexer::LexerError::UserError(ast::HotlistError::RequiredFieldMissing("encoding"))
             }
         );
     }

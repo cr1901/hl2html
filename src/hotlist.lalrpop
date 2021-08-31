@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use lalrpop_util::ParseError;
 use version_compare::version::Version as RefVersion;
 
 use crate::ast;
@@ -22,20 +23,26 @@ pub HotlistVersion: RefVersion<'input> = {
 };
 
 pub HotlistOptions: ast::Options<'input> = {
-    "Options:" <mut vo:SingleOp*> => {
-        let mut ops = ast::Options::<'input>::default();
+    "Options:" <mut vo:SingleOp*> =>? {
+        let mut encoding: Option<ast::Encoding> = None;
 
         for o in vo {
             match o {
-                ast::SingleOp::Encoding(encv) => {
-                    ops.encoding = encv;
+                ast::SingleOp::Encoding(enc) => {
+                    encoding = Some(enc);
                 }
             }
         }
 
-        ops
+        let encoding = encoding.ok_or(ParseError::User {
+            error: lexer::LexerError::UserError(ast::HotlistError::RequiredFieldMissing("encoding"))
+        })?;
+
+        Ok(ast::Options {
+            encoding
+        })
     }
-};
+}
 
 pub(crate) SingleOp: ast::SingleOp<'input> = {
     "encoding" "=" <enc:Encoding> "," "version" "=" <v:Version> => {
@@ -59,7 +66,9 @@ Version: RefVersion<'input> = {
 
 extern {
     type Location = usize;
-    type Error = lexer::LexerError;
+    type Error = lexer::LexerError<'input>; // lexgen and lalrpop diverge in syntax in
+                                            // this respect; lexgen needs LHS lifetime, lalrpop
+                                            // doesn't.
 
     enum lexer::Tok<'input> {
         // Literals
