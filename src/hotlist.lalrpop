@@ -37,9 +37,7 @@ pub HotlistOptions: ast::Options<'input> = {
             }
         }
 
-        let encoding = encoding.ok_or(ParseError::User {
-            error: lexer::LexerError::UserError(ast::HotlistError::RequiredFieldMissing("encoding"))
-        })?;
+        let encoding = encoding.ok_or(ParseError::from(ast::HotlistError::RequiredFieldMissing("encoding")))?;
 
         Ok(ast::Options {
             encoding
@@ -96,21 +94,11 @@ pub(crate) NoteEntry: ast::Note<'input> = {
             }
         }
 
-        let id = id.ok_or(ParseError::User {
-            error: lexer::LexerError::UserError(ast::HotlistError::RequiredFieldMissing("ID"))
-        })?;
-        let uuid = uuid.ok_or(ParseError::User {
-            error: lexer::LexerError::UserError(ast::HotlistError::RequiredFieldMissing("UNIQUEID"))
-        })?;
-        let contents = contents.ok_or(ParseError::User {
-            error: lexer::LexerError::UserError(ast::HotlistError::RequiredFieldMissing("NAME"))
-        })?;
-        let url = url.ok_or(ParseError::User {
-            error: lexer::LexerError::UserError(ast::HotlistError::RequiredFieldMissing("URL"))
-        })?;
-        let timestamp = timestamp.ok_or(ParseError::User {
-            error: lexer::LexerError::UserError(ast::HotlistError::RequiredFieldMissing("CREATED"))
-        })?;
+        let id = id.ok_or(ParseError::from(ast::HotlistError::RequiredFieldMissing("ID")))?;
+        let uuid = uuid.ok_or(ParseError::from(ast::HotlistError::RequiredFieldMissing("UNIQUEID")))?;
+        let contents = contents.ok_or(ParseError::from(ast::HotlistError::RequiredFieldMissing("NAME")))?;
+        let url = url.ok_or(ParseError::from(ast::HotlistError::RequiredFieldMissing("URL")))?;
+        let timestamp = timestamp.ok_or(ParseError::from(ast::HotlistError::RequiredFieldMissing("CREATED")))?;
 
         Ok(ast::Note {
             id,
@@ -124,9 +112,9 @@ pub(crate) NoteEntry: ast::Note<'input> = {
 
 pub(crate) NoteField: ast::NoteField<'input> = {
     <s:Integer_> =>? {
-        Ok(ast::NoteField::Id(str::parse(s).map_err(|_| ParseError::User {
-            error: lexer::LexerError::UserError(ast::HotlistError::U32OutOfRange(s))
-        })?))
+        Ok(ast::NoteField::Id(str::parse(s).map_err(|_|
+            ParseError::from(ast::HotlistError::U32OutOfRange(s)))?
+        ))
     }
 }
 

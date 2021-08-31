@@ -60,25 +60,11 @@ lexer! {
         // Whitespace should be skipped when possible.
         [' ' '\t' '\n']+,
 
-        "Opera Hotlist version" => |lexer| {
-            lexer.return_(Tok::HotlistVersion)
-        },
-
-        "Options:" => |lexer| {
-            lexer.return_(Tok::Options)
-        },
-
-        "encoding" => |lexer| {
-            lexer.return_(Tok::Encoding)
-        },
-
-        "version" => |lexer| {
-            lexer.return_(Tok::EncodingVersion)
-        },
-
-        "utf8" => |lexer| {
-            lexer.return_(Tok::Utf8)
-        },
+        "Opera Hotlist version" = Tok::HotlistVersion,
+        "Options:" = Tok::Options,
+        "encoding" = Tok::Encoding,
+        "version" = Tok::EncodingVersion,
+        "utf8" = Tok::Utf8,
 
         "=" => |mut lexer| {
             if lexer.state().in_note_name {
@@ -88,58 +74,24 @@ lexer! {
             }
         },
 
-        "#NOTE" => |lexer| {
-             lexer.return_(Tok::NoteHeader)
-        },
-
-        "ID" => |lexer| {
-             lexer.return_(Tok::Id)
-        },
-
-        "UNIQUEID" => |lexer| {
-             lexer.return_(Tok::UniqueId)
-        },
+        "#NOTE" = Tok::NoteHeader,
+        "ID" = Tok::Id,
+        "UNIQUEID" = Tok::UniqueId,
 
         "NAME" => |mut lexer| {
              lexer.state().in_note_name = true;
              lexer.return_(Tok::Name)
         },
 
-        "URL" => |lexer| {
-             lexer.return_(Tok::Url)
-        },
-
-        "CREATED" => |lexer| {
-             lexer.return_(Tok::Created)
-        },
-
-        "," => |lexer| {
-             lexer.return_(Tok::Comma)
-        },
-
-        "EXPANDED" => |lexer| {
-             lexer.return_(Tok::Expanded)
-        },
-
-        "TRASH FOLDER"  => |lexer| {
-             lexer.return_(Tok::TrashFolder)
-        },
-
-        "YES"  => |lexer| {
-             lexer.return_(Tok::Yes)
-        },
-
-        "NO" => |lexer| {
-             lexer.return_(Tok::No)
-        },
-
-        "FOLDER" => |lexer| {
-            lexer.return_(Tok::Folder)
-        },
-
-        "-" => |lexer| {
-            lexer.return_(Tok::FolderEnd)
-        },
+        "URL" = Tok::Url,
+        "CREATED" = Tok::Created,
+        "," = Tok::Comma,
+        "EXPANDED" = Tok::Expanded,
+        "TRASH FOLDER"  = Tok::TrashFolder,
+        "YES"  = Tok::Yes,
+        "NO" = Tok::No,
+        "FOLDER" = Tok::Folder,
+        "-" = Tok::FolderEnd,
 
         // Regexes
         $version_re => |lexer| {

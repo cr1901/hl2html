@@ -1,7 +1,10 @@
 use chrono::{DateTime, Utc};
+use lalrpop_util::ParseError;
 use url::Url;
 use uuid::Uuid;
 use version_compare::version::Version;
+
+use crate::lexer::{LexerError, Tok};
 
 #[derive(Debug, PartialEq)]
 pub struct HotList<'a> {
@@ -58,7 +61,7 @@ pub(crate) enum NoteField<'a> {
     Uuid(Uuid),
     Contents(&'a str),
     Url(Url),
-    Timestamp(DateTime<Utc>)
+    Timestamp(DateTime<Utc>),
 }
 
 // TODO: impl Display.
@@ -67,5 +70,13 @@ pub(crate) enum NoteField<'a> {
 #[derive(Debug, PartialEq, Eq)]
 pub enum HotlistError<'a> {
     RequiredFieldMissing(&'a str),
-    U32OutOfRange(&'a str)
+    U32OutOfRange(&'a str),
+}
+
+impl<'a> From<HotlistError<'a>> for ParseError<usize, Tok<'_>, LexerError<'a>> {
+    fn from(error: HotlistError<'a>) -> Self {
+        ParseError::User {
+            error: LexerError::UserError(error),
+        }
+    }
 }
