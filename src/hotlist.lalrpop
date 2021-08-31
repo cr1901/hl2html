@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc, NaiveDateTime};
 use lalrpop_util::ParseError;
 use url::Url;
 use uuid::Uuid;
@@ -111,10 +111,31 @@ pub(crate) NoteEntry: ast::Note<'input> = {
 }
 
 pub(crate) NoteField: ast::NoteField<'input> = {
-    <s:Integer_> =>? {
-        Ok(ast::NoteField::Id(str::parse(s).map_err(|_|
-            ParseError::from(ast::HotlistError::U32OutOfRange(s)))?
-        ))
+    "ID" "=" <s:Integer_> =>? {
+        str::parse(s).map(ast::NoteField::Id).map_err(|_| ParseError::from(ast::HotlistError::U32OutOfRange(s)))
+    },
+
+    "UNIQUEID" "=" <s:UuidOrInt> =>? {
+        Uuid::parse_str(s).map(ast::NoteField::Uuid)
+                          .map_err(|_| ParseError::from(ast::HotlistError::InvalidUuid(s)))
+    },
+
+    "NAME" "=" <s:NoteBody_> => {
+        ast::NoteField::Contents(s)
+    },
+
+    "URL" "=" <s:UrlBody_> =>? {
+        Url::parse(s).map(ast::NoteField::Url)
+                     .map_err(|_| ParseError::from(ast::HotlistError::InvalidUrl(s)))
+    },
+
+    "CREATED" "=" <s:Integer_> =>? {
+        // Infers type as ()... Huh?!
+        // let timestamp = str::parse(s).map_err(|_| ParseError::from(ast::HotlistError::U32OutOfRange(s)))?;
+        let timestamp: u32 = str::parse(s).map_err(|_| ParseError::from(ast::HotlistError::U32OutOfRange(s)))?;
+        let ntd = NaiveDateTime::from_timestamp(timestamp as i64, 0);
+
+        Ok(ast::NoteField::Timestamp(DateTime::from_utc(ntd, Utc)))
     }
 }
 
@@ -127,7 +148,10 @@ Version: RefVersion<'input> = {
     <s:Integer_> => RefVersion::from(s).unwrap()
 }
 
-//NoteBody_: () = <s:r"[^\n]*."> => unimplemented!();
+UuidOrInt: &'input str = {
+   <s:Integer_> => s,
+   <s:Uuid_> => s
+}
 
 extern {
     type Location = usize;

@@ -71,6 +71,8 @@ pub(crate) enum NoteField<'a> {
 pub enum HotlistError<'a> {
     RequiredFieldMissing(&'a str),
     U32OutOfRange(&'a str),
+    InvalidUuid(&'a str),
+    InvalidUrl(&'a str),
 }
 
 impl<'a> From<HotlistError<'a>> for ParseError<usize, Tok<'_>, LexerError<'a>> {

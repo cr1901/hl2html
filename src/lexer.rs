@@ -94,14 +94,14 @@ lexer! {
         "-" = Tok::FolderEnd,
 
         // Regexes
-        $version_re => |lexer| {
-            let match_ = lexer.match_();
-            lexer.return_(Tok::Version(match_))
-        },
-
         $integer_re => |lexer| {
             let match_ = lexer.match_();
             lexer.return_(Tok::Integer(match_))
+        },
+
+        $version_re => |lexer| {
+            let match_ = lexer.match_();
+            lexer.return_(Tok::Version(match_))
         },
 
         $uuid_re => |lexer| {
@@ -121,7 +121,9 @@ lexer! {
             if let Some('\n') = lexer.peek() {
                 let match_ = lexer.match_();
                 lexer.state().in_note_name = false;
-                lexer.switch_and_return(LexerRule::Init, Tok::NoteBody(match_))
+
+                // For some reason the equal sign remains. TODO: Handle empty slice.
+                lexer.switch_and_return(LexerRule::Init, Tok::NoteBody(&match_[1..]))
             } else {
                 lexer.continue_()
             }

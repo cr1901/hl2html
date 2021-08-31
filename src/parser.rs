@@ -22,7 +22,10 @@ mod tests {
     use crate::ast;
     use crate::lexer;
 
+    use chrono::{DateTime, Utc, NaiveDateTime};
     use lalrpop_util::ParseError;
+    use url::Url;
+    use uuid::Uuid;
     use version_compare::version::Version as RefVersion;
 
     #[test]
@@ -91,17 +94,28 @@ mod tests {
             }
         );
     }
-}
 
-//     #[test]
-//     fn test_note_with_() {
-//         let note = "#NOTE\n\
-//         \tID=18\n\
-//         \tUNIQUEID=75356378DB08C2429F4BE860ED92596F\n\
-//         \tNAME=This is a fake note with \x02\x02an encoded linebreak.\n\
-//         \tURL=http://www.example.com\n\
-//         \tCREATED=1322363353\n";
-//
-//         println!("{}", note);
-//     }
-// }
+    #[test]
+    fn test_note_with_linebreak() {
+        let inp = "#NOTE\n\
+        \tID=18\n\
+        \tUNIQUEID=75356378DB08C2429F4BE860ED92596F\n\
+        \tNAME=This is a fake note with \x02\x02an encoded linebreak.\n\
+        \tURL=http://www.example.com\n\
+        \tCREATED=1322363353\n";
+
+        let lexer = lexer::Lexer::new(inp);
+        assert_eq!(
+            hotlist::NoteEntryParser::new()
+                .parse(inp, lexer)
+                .unwrap(),
+            ast::Note {
+                id: 18,
+                uuid: Uuid::parse_str("75356378DB08C2429F4BE860ED92596F").unwrap(),
+                contents: "This is a fake note with \x02\x02an encoded linebreak.",
+                url: Url::parse("http://www.example.com").unwrap(),
+                timestamp: DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(1322363353, 0), Utc)
+            }
+        );
+    }
+}
