@@ -1,6 +1,9 @@
 use std::str::FromStr;
 
+use chrono::{DateTime, Utc};
 use lalrpop_util::ParseError;
+use url::Url;
+use uuid::Uuid;
 use version_compare::version::Version as RefVersion;
 
 use crate::ast;
@@ -44,6 +47,12 @@ pub HotlistOptions: ast::Options<'input> = {
     }
 }
 
+pub HotlistEntries: Vec<ast::EntryKind<'input>> = {
+    <ve:SingleEntry*> => {
+        ve
+    }
+}
+
 pub(crate) SingleOp: ast::SingleOp<'input> = {
     "encoding" "=" <enc:Encoding> "," "version" "=" <v:Version> => {
         let encv = match enc {
@@ -51,6 +60,74 @@ pub(crate) SingleOp: ast::SingleOp<'input> = {
         };
         ast::SingleOp::Encoding(encv)
     },
+}
+
+pub(crate) SingleEntry: ast::EntryKind<'input> = {
+    <n:NoteEntry> => {
+        ast::EntryKind::Note(n)
+    }
+}
+
+pub(crate) NoteEntry: ast::Note<'input> = {
+    "#NOTE" <nfv:NoteField*> =>? {
+        let mut id: Option<u32> = None;
+        let mut uuid: Option<Uuid> = None;
+        let mut contents: Option<&'input str> = None;
+        let mut url: Option<Url> = None;
+        let mut timestamp: Option<DateTime<Utc>> = None;
+
+        for nf in nfv {
+            match nf {
+                ast::NoteField::Id(i) => {
+                    id = Some(i);
+                },
+                ast::NoteField::Uuid(u) => {
+                    uuid = Some(u);
+                },
+                ast::NoteField::Contents(c) => {
+                    contents = Some(c);
+                },
+                ast::NoteField::Url(u) => {
+                    url = Some(u);
+                },
+                ast::NoteField::Timestamp(t) => {
+                    timestamp = Some(t)
+                }
+            }
+        }
+
+        let id = id.ok_or(ParseError::User {
+            error: lexer::LexerError::UserError(ast::HotlistError::RequiredFieldMissing("ID"))
+        })?;
+        let uuid = uuid.ok_or(ParseError::User {
+            error: lexer::LexerError::UserError(ast::HotlistError::RequiredFieldMissing("UNIQUEID"))
+        })?;
+        let contents = contents.ok_or(ParseError::User {
+            error: lexer::LexerError::UserError(ast::HotlistError::RequiredFieldMissing("NAME"))
+        })?;
+        let url = url.ok_or(ParseError::User {
+            error: lexer::LexerError::UserError(ast::HotlistError::RequiredFieldMissing("URL"))
+        })?;
+        let timestamp = timestamp.ok_or(ParseError::User {
+            error: lexer::LexerError::UserError(ast::HotlistError::RequiredFieldMissing("CREATED"))
+        })?;
+
+        Ok(ast::Note {
+            id,
+            uuid,
+            contents,
+            url,
+            timestamp
+        })
+    }
+}
+
+pub(crate) NoteField: ast::NoteField<'input> = {
+    <s:Integer_> =>? {
+        Ok(ast::NoteField::Id(str::parse(s).map_err(|_| ParseError::User {
+            error: lexer::LexerError::UserError(ast::HotlistError::U32OutOfRange(s))
+        })?))
+    }
 }
 
 Encoding: ast::Encoding<'input> = {

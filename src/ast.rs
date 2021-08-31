@@ -52,10 +52,20 @@ pub struct Note<'a> {
     pub timestamp: DateTime<Utc>,
 }
 
+#[derive(Debug, PartialEq)]
+pub(crate) enum NoteField<'a> {
+    Id(u32),
+    Uuid(Uuid),
+    Contents(&'a str),
+    Url(Url),
+    Timestamp(DateTime<Utc>)
+}
+
 // TODO: impl Display.
 // We squirrel this away in LexerError's UserError variant, because LexerError is already
 // associated with the ParseError::User variant.
 #[derive(Debug, PartialEq, Eq)]
 pub enum HotlistError<'a> {
     RequiredFieldMissing(&'a str),
+    U32OutOfRange(&'a str)
 }
