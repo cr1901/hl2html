@@ -9,11 +9,11 @@ use crate::lexer;
 
 grammar<'input>(input: &'input str);
 
-pub Hotlist: ast::HotList<'input> = {
+pub Hotlist: ast::Hotlist<'input> = {
     <hdr:HotlistHeader> <entries:HotlistEntries> => {
         let (version, options) = hdr;
 
-        ast::HotList {
+        ast::Hotlist {
             version,
             options,
             entries

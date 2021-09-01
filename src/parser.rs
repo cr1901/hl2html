@@ -8,7 +8,7 @@ lalrpop_mod!(pub hotlist); // synthesized by LALRPOP
 
 use eyre::Result;
 
-pub fn parse_hotlist_from_file<'a, T: AsRef<Path>>(filename: T) -> Result<HotList<'a>> {
+pub fn parse_hotlist_from_file<'a, T: AsRef<Path>>(filename: T) -> Result<Hotlist<'a>> {
     let hotlist = fs::read_to_string(filename)?;
     // let file = HotlistParser::parse(Rule::HOTLIST, &parser)?.next().unwrap();
 

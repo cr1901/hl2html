@@ -7,7 +7,7 @@ use version_compare::version::Version;
 use crate::lexer::{LexerError, Tok};
 
 #[derive(Debug, PartialEq)]
-pub struct HotList<'a> {
+pub struct Hotlist<'a> {
     pub version: Version<'a>,
     pub options: Options<'a>,
     pub entries: Vec<EntryKind<'a>>,
