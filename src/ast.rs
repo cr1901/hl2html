@@ -4,6 +4,8 @@ use url::Url;
 use uuid::Uuid;
 use version_compare::version::Version;
 
+use std::fmt;
+
 use crate::lexer::{LexerError, Tok};
 
 #[derive(Debug, PartialEq)]
@@ -64,7 +66,6 @@ pub(crate) enum NoteField<'a> {
     Timestamp(DateTime<Utc>),
 }
 
-// TODO: impl Display.
 // We squirrel this away in LexerError's UserError variant, because LexerError is already
 // associated with the ParseError::User variant.
 #[derive(Debug, PartialEq, Eq)]
@@ -73,6 +74,17 @@ pub enum HotlistError<'a> {
     U32OutOfRange(&'a str),
     InvalidUuid(&'a str),
     InvalidUrl(&'a str),
+}
+
+impl<'a> fmt::Display for HotlistError<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            HotlistError::RequiredFieldMissing(fld) => write!(f, "required Note/Folder field {} missing", fld),
+            HotlistError::U32OutOfRange(u) => write!(f, "integer {} does not fit into u32", u),
+            HotlistError::InvalidUuid(u) => write!(f, "{} is not a valid UUID", u),
+            HotlistError::InvalidUrl(u)  => write!(f, "{} is not a valid URL", u),
+        }
+    }
 }
 
 impl<'a> From<HotlistError<'a>> for ParseError<usize, Tok<'_>, LexerError<'a>> {

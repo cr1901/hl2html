@@ -184,7 +184,7 @@ extern {
         "TRASH FOLDER"  => lexer::Tok::TrashFolder,
         "YES"  => lexer::Tok::Yes,
         "NO" => lexer::Tok::No,
-        "FOLDER" => lexer::Tok::Folder,
+        "FOLDER" => lexer::Tok::FolderHeader,
         "-" => lexer::Tok::FolderEnd,
 
         // Regex-based

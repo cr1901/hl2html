@@ -1,19 +1,27 @@
-use crate::ast::*;
+use crate::ast;
+use crate::lexer;
 
-use std::fs;
+use std::error::Error;
+use std::fs::File;
+use std::io::BufReader;
+use std::io::prelude::*;
 use std::path::Path;
 
 use lalrpop_util::lalrpop_mod;
 lalrpop_mod!(pub hotlist); // synthesized by LALRPOP
 
-use eyre::Result;
+pub fn parse_hotlist_from_file<'a, T: AsRef<Path>>(filename: T, in_buf: &'a mut String) -> Result<ast::Hotlist<'a>, Box<dyn Error + Send + Sync + 'a>> {
+    let file = File::open(filename)?;
+    let mut buf_reader = BufReader::new(file);
 
-pub fn parse_hotlist_from_file<'a, T: AsRef<Path>>(filename: T) -> Result<Hotlist<'a>> {
-    let hotlist = fs::read_to_string(filename)?;
-    // let file = HotlistParser::parse(Rule::HOTLIST, &parser)?.next().unwrap();
+    buf_reader.read_to_string(&mut *in_buf)?;
 
-    //for entry in file.
-    unimplemented!();
+    let lexer = lexer::Lexer::new(&*in_buf);
+    let parser = hotlist::HotlistParser::new();
+
+    let hotlist = parser.parse(in_buf, lexer)?;
+
+    Ok(hotlist)
 }
 
 #[cfg(test)]

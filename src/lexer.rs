@@ -1,5 +1,7 @@
 use lexgen::lexer;
 
+use std::fmt;
+
 use crate::ast;
 
 // It's unfortunate, but the lexer has to do a bit of it's own parsing to successfully parse
@@ -27,7 +29,7 @@ pub enum Tok<'input> {
     TrashFolder,     // "TRASH FOLDER"
     Yes,             // "YES"
     No,              // "NO"
-    Folder,          // "FOLDER"
+    FolderHeader,    // "#FOLDER"
     FolderEnd,       // "-"
 
     // Regex-based
@@ -36,6 +38,45 @@ pub enum Tok<'input> {
     Uuid(&'input str),
     UrlBody(&'input str),
     NoteBody(&'input str),
+}
+
+impl<'input> fmt::Display for Tok<'input> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Tok::HotlistVersion => write!(f, r#"Hotlist version ("Opera Hotlist version")"#),
+            Tok::Options => write!(f, r#"Options ("Options:")"#),
+            Tok::Encoding => write!(f, r#"Encoding ("encoding")"#),
+            Tok::EncodingVersion => write!(f, r#"Encoding version ("version")"#),
+            Tok::Utf8 => write!(f, r#"UTF8 ("utf8")"#),
+            Tok::Equal => write!(f, r#"Equals sign ("=")"#),
+            Tok::NoteHeader => write!(f, r##"Note header ("#NOTE")"##),
+            Tok::Id => write!(f, r#"Numeric ID field ("ID")"#),
+            Tok::UniqueId => write!(f, r#"UUID field ("UNIQUEID")"#),
+            Tok::Name => write!(f, r#"Note body field ("NAME")"#),
+            Tok::Url => write!(f, r#"URL field ("URL")"#),
+            Tok::Created => write!(f, r#"Timestamp field ("CREATED")"#),
+            Tok::Comma => write!(f, r#"Comma (",")"#),
+            Tok::Expanded => write!(f, r#"Expander ("YES")"#),
+            Tok::TrashFolder=> write!(f, r#"Trash folder ("TRASH FOLDER")"#),
+            Tok::Yes => write!(f, r#"Yes/True ("YES")"#),
+            Tok::No => write!(f, r#"No/False ("NO")"#),
+            Tok::FolderHeader => write!(f, r##"Folder header ("#FOLDER")"##),
+            Tok::FolderEnd => write!(f, r#"End of folder delimiter ("-")"#),
+
+            // Regex-based
+            Tok::Version(ver) => write!(f, r#"Version ("{}")"#, ver),
+            Tok::Integer(int) => write!(f, r#"Integer ("{}")"#, int),
+            Tok::Uuid(uuid) => write!(f, r#"UUID ("{}")"#, uuid),
+            Tok::UrlBody(url) => write!(f, r#"URL ("{}")"#, url),
+            Tok::NoteBody(note) => {
+                if note.len() < 80 {
+                    write!(f, r#"Note body ("{}")"#, note)
+                } else {
+                    write!(f, r#"Note body ("{}"... [cont])"#, note)
+                }
+            }
+        }
+    }
 }
 
 #[derive(Default)]
@@ -90,7 +131,7 @@ lexer! {
         "TRASH FOLDER"  = Tok::TrashFolder,
         "YES"  = Tok::Yes,
         "NO" = Tok::No,
-        "FOLDER" = Tok::Folder,
+        "#FOLDER" = Tok::FolderHeader,
         "-" = Tok::FolderEnd,
 
         // Regexes
@@ -128,5 +169,20 @@ lexer! {
                 lexer.continue_()
             }
         },
+    }
+}
+
+// impl<'input> Clone for LexerError<'input> {
+//     fn clone(&self) -> Self {
+//         *self
+//     }
+// }
+
+impl<'input> fmt::Display for LexerError<'input> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            LexerError::LexerError { char_idx } => write!(f, "unknown token starting at offset {}", char_idx),
+            LexerError::UserError(e) => e.fmt(f)
+        }
     }
 }
