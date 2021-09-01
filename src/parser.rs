@@ -85,13 +85,12 @@ mod tests {
             hotlist::HotlistHeaderParser::new()
                 .parse(inp, lexer)
                 .unwrap(),
-            ast::HotList {
-                version: RefVersion::from("2.0").unwrap(),
-                options: ast::Options {
+            (
+                RefVersion::from("2.0").unwrap(),
+                ast::Options {
                     encoding: ast::Encoding::Utf8(RefVersion::from("3.0").unwrap())
                 },
-                entries: Vec::<ast::EntryKind>::new()
-            }
+            )
         );
     }
 

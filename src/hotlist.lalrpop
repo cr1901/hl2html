@@ -9,21 +9,29 @@ use crate::lexer;
 
 grammar<'input>(input: &'input str);
 
-pub HotlistHeader: ast::HotList<'input> = {
-    <version:HotlistVersion> <options:HotlistOptions> => {
+pub Hotlist: ast::HotList<'input> = {
+    <hdr:HotlistHeader> <entries:HotlistEntries> => {
+        let (version, options) = hdr;
+
         ast::HotList {
             version,
             options,
-            entries: Vec::<ast::EntryKind>::new()
+            entries
         }
     }
 }
 
-pub HotlistVersion: RefVersion<'input> = {
+pub(crate) HotlistHeader: (RefVersion<'input>, ast::Options<'input>) = {
+    <version:HotlistVersion> <options:HotlistOptions> => {
+        (version, options)
+    }
+}
+
+pub(crate) HotlistVersion: RefVersion<'input> = {
     "Opera Hotlist version" <v:Version> => v
 };
 
-pub HotlistOptions: ast::Options<'input> = {
+pub(crate) HotlistOptions: ast::Options<'input> = {
     "Options:" <vo:SingleOp*> =>? {
         let mut encoding: Option<ast::Encoding> = None;
 
@@ -43,7 +51,7 @@ pub HotlistOptions: ast::Options<'input> = {
     }
 }
 
-pub HotlistEntries: Vec<ast::EntryKind<'input>> = {
+pub(crate) HotlistEntries: Vec<ast::EntryKind<'input>> = {
     <ve:SingleEntry*> => {
         ve
     }
