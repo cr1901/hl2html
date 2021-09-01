@@ -3,7 +3,7 @@ use crate::ast::*;
 use std::fs;
 use std::path::Path;
 
-use lalrpop_util::{lalrpop_mod, ParseError};
+use lalrpop_util::lalrpop_mod;
 lalrpop_mod!(pub hotlist); // synthesized by LALRPOP
 
 use eyre::Result;
@@ -22,7 +22,7 @@ mod tests {
     use crate::ast;
     use crate::lexer;
 
-    use chrono::{DateTime, Utc, NaiveDateTime};
+    use chrono::{Utc, TimeZone};
     use lalrpop_util::ParseError;
     use url::Url;
     use uuid::Uuid;
@@ -114,7 +114,7 @@ mod tests {
                 uuid: Uuid::parse_str("75356378DB08C2429F4BE860ED92596F").unwrap(),
                 contents: "This is a fake note with \x02\x02an encoded linebreak.",
                 url: Url::parse("http://www.example.com").unwrap(),
-                timestamp: DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(1322363353, 0), Utc)
+                timestamp: Utc.timestamp(1322363353, 0)
             }
         );
     }

@@ -1,6 +1,4 @@
-use std::str::FromStr;
-
-use chrono::{DateTime, Utc, NaiveDateTime};
+use chrono::{DateTime, TimeZone, Utc};
 use lalrpop_util::ParseError;
 use url::Url;
 use uuid::Uuid;
@@ -26,7 +24,7 @@ pub HotlistVersion: RefVersion<'input> = {
 };
 
 pub HotlistOptions: ast::Options<'input> = {
-    "Options:" <mut vo:SingleOp*> =>? {
+    "Options:" <vo:SingleOp*> =>? {
         let mut encoding: Option<ast::Encoding> = None;
 
         for o in vo {
@@ -60,7 +58,7 @@ pub(crate) SingleOp: ast::SingleOp<'input> = {
     },
 }
 
-pub(crate) SingleEntry: ast::EntryKind<'input> = {
+SingleEntry: ast::EntryKind<'input> = {
     <n:NoteEntry> => {
         ast::EntryKind::Note(n)
     }
@@ -110,7 +108,7 @@ pub(crate) NoteEntry: ast::Note<'input> = {
     }
 }
 
-pub(crate) NoteField: ast::NoteField<'input> = {
+NoteField: ast::NoteField<'input> = {
     "ID" "=" <s:Integer_> =>? {
         str::parse(s).map(ast::NoteField::Id).map_err(|_| ParseError::from(ast::HotlistError::U32OutOfRange(s)))
     },
@@ -129,13 +127,13 @@ pub(crate) NoteField: ast::NoteField<'input> = {
                      .map_err(|_| ParseError::from(ast::HotlistError::InvalidUrl(s)))
     },
 
+    // TODO: Might in fact be an i32. Create "NegInteger" type?
     "CREATED" "=" <s:Integer_> =>? {
         // Infers type as ()... Huh?!
         // let timestamp = str::parse(s).map_err(|_| ParseError::from(ast::HotlistError::U32OutOfRange(s)))?;
         let timestamp: u32 = str::parse(s).map_err(|_| ParseError::from(ast::HotlistError::U32OutOfRange(s)))?;
-        let ntd = NaiveDateTime::from_timestamp(timestamp as i64, 0);
 
-        Ok(ast::NoteField::Timestamp(DateTime::from_utc(ntd, Utc)))
+        Ok(ast::NoteField::Timestamp(Utc.timestamp(timestamp as i64, 0)))
     }
 }
 
