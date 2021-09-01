@@ -118,4 +118,49 @@ mod tests {
             }
         );
     }
+
+    #[test]
+    fn test_two_notes() {
+        let inp = "#NOTE\n\
+        \tID=1\n\
+        \tUNIQUEID=00000000000000000000000000000000\n\
+        \tNAME=Foo.\n\
+        \tURL=https://www.example.com/a/random/path\n\
+        \tCREATED=0\n\
+        \n\
+        #NOTE\n\
+        \tID=2\n\
+        \tUNIQUEID=FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\n\
+        \tNAME=Bar.\n\
+        \tURL=http://www.example.org/path/to/file\n\
+        \tCREATED=2147483647\n";
+
+        let lexer = lexer::Lexer::new(inp);
+        assert_eq!(
+            &hotlist::HotlistEntriesParser::new()
+                .parse(inp, lexer)
+                .unwrap(),
+            &[
+                ast::EntryKind::Note(
+                    ast::Note {
+                        id: 1,
+                        uuid: Uuid::parse_str("00000000000000000000000000000000").unwrap(),
+                        contents: "Foo.",
+                        url: Url::parse("https://www.example.com/a/random/path").unwrap(),
+                        timestamp: Utc.timestamp(0, 0)
+                    }
+                ),
+
+                ast::EntryKind::Note(
+                    ast::Note {
+                        id: 2,
+                        uuid: Uuid::parse_str("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF").unwrap(),
+                        contents: "Bar.",
+                        url: Url::parse("http://www.example.org/path/to/file").unwrap(),
+                        timestamp: Utc.timestamp(2147483647, 0)
+                    }
+                ),
+            ]
+        );
+    }
 }
