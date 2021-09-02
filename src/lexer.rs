@@ -1,5 +1,6 @@
 use lexgen::lexer;
 
+use std::error;
 use std::fmt;
 
 use crate::ast;
@@ -172,17 +173,22 @@ lexer! {
     }
 }
 
-// impl<'input> Clone for LexerError<'input> {
-//     fn clone(&self) -> Self {
-//         *self
-//     }
-// }
-
 impl<'input> fmt::Display for LexerError<'input> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             LexerError::LexerError { char_idx } => write!(f, "unknown token starting at offset {}", char_idx),
             LexerError::UserError(e) => e.fmt(f)
+        }
+    }
+}
+
+impl error::Error for LexerError<'static> {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            LexerError::UserError(e) => {
+                Some(e)
+            },
+            _ => None
         }
     }
 }

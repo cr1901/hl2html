@@ -2,12 +2,13 @@ use crate::ast;
 use crate::lexer;
 
 use std::error::Error;
+use std::fmt;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::prelude::*;
 use std::path::Path;
 
-use lalrpop_util::lalrpop_mod;
+use lalrpop_util::{lalrpop_mod, ParseError};
 lalrpop_mod!(pub hotlist); // synthesized by LALRPOP
 
 pub fn parse_hotlist_from_file<'a, T: AsRef<Path>>(filename: T, in_buf: &'a mut String) -> Result<ast::Hotlist<'a>, Box<dyn Error + Send + Sync + 'a>> {
@@ -23,6 +24,39 @@ pub fn parse_hotlist_from_file<'a, T: AsRef<Path>>(filename: T, in_buf: &'a mut 
 
     Ok(hotlist)
 }
+
+// ParseError in LALRPOP does not provide a source() implementation, and no specialization, so I
+// provide a newtype here for the time being.
+#[derive(Debug)]
+pub struct ParseErrorWrapper<'a, 'b>(&'a ParseError<usize, lexer::Tok<'b>, lexer::LexerError<'b>>);
+
+impl<'a, 'b> fmt::Display for ParseErrorWrapper<'a, 'b> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl<'a> Error for ParseErrorWrapper<'a, 'static> {
+    fn description(&self) -> &str {
+        self.0.description()
+    }
+
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self.0 {
+            ParseError::User { error: u_err } => {
+                Some(u_err)
+            },
+            _ => None
+        }
+    }
+}
+
+impl<'a> From<&'a ParseError<usize, lexer::Tok<'static>, lexer::LexerError<'static>>> for ParseErrorWrapper<'a, 'static> {
+    fn from(p: &'a ParseError<usize, lexer::Tok<'static>, lexer::LexerError<'static>>) -> Self {
+        ParseErrorWrapper(p)
+    }
+}
+
 
 #[cfg(test)]
 mod tests {

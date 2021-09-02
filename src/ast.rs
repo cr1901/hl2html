@@ -5,6 +5,7 @@ use uuid::Uuid;
 use version_compare::version::Version;
 
 use std::fmt;
+use std::error;
 
 use crate::lexer::{LexerError, Tok};
 
@@ -70,22 +71,30 @@ pub(crate) enum NoteField<'a> {
 // associated with the ParseError::User variant.
 #[derive(Debug, PartialEq, Eq)]
 pub enum HotlistError<'a> {
-    RequiredFieldMissing(&'a str),
+    RequiredFieldMissing(&'a str, SpanInfo),
     U32OutOfRange(&'a str),
     InvalidUuid(&'a str),
     InvalidUrl(&'a str),
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub struct SpanInfo {
+    pub error: Option<(usize, usize)>,
+    pub entry: (usize, usize)
+}
+
 impl<'a> fmt::Display for HotlistError<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            HotlistError::RequiredFieldMissing(fld) => write!(f, "required Note/Folder field {} missing", fld),
+            HotlistError::RequiredFieldMissing(fld, _) => write!(f, "required Note/Folder field {} missing", fld),
             HotlistError::U32OutOfRange(u) => write!(f, "integer {} does not fit into u32", u),
             HotlistError::InvalidUuid(u) => write!(f, "{} is not a valid UUID", u),
             HotlistError::InvalidUrl(u)  => write!(f, "{} is not a valid URL", u),
         }
     }
 }
+
+impl<'a> error::Error for HotlistError<'a> {}
 
 impl<'a> From<HotlistError<'a>> for ParseError<usize, Tok<'_>, LexerError<'a>> {
     fn from(error: HotlistError<'a>) -> Self {
