@@ -37,12 +37,12 @@ pub fn get_line_and_offset<T: Read>(
     file_offset: usize,
 ) -> Result<LineInfo, Box<dyn Error + Send + Sync + 'static>> {
     let mut num_lines = 1;
-    let mut offset_cur_line = 1;
+    let mut offset_cur_line = 0;
 
     for (i, b) in filebuf.bytes().enumerate() {
         if (b? as char) == '\n' {
             num_lines = num_lines + 1;
-            offset_cur_line = i + 1;
+            offset_cur_line = i + 1; // Next line begins one char from now- anticipate it!
         }
 
         if i >= file_offset {
@@ -52,7 +52,8 @@ pub fn get_line_and_offset<T: Read>(
 
     Ok(LineInfo {
         line: num_lines,
-        offset: file_offset - offset_cur_line,
+        offset: (file_offset - offset_cur_line) + 1, // Both file_offset and offset_cur_line are
+                                                     // zero-based, we want one-based.
     })
 }
 
