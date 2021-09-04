@@ -10,7 +10,7 @@ use argh::FromArgs;
 use lalrpop_util::ParseError;
 use std::error::Error;
 use std::fs::File;
-use std::io::{BufReader, Read, Seek, SeekFrom};
+use std::io::{BufRead, BufReader, Read, Seek, SeekFrom};
 use std::path::Path;
 
 #[derive(FromArgs, PartialEq, Debug)]
@@ -112,9 +112,28 @@ fn print_error_and_exit<'a, T: AsRef<Path>>(
                 _ => {}
             },
             ParseError::User {
-                error: LexerError::LexerError { char_idx: _ },
+                error: LexerError::LexerError { char_idx: idx },
             } => {
-                unimplemented!()
+                let li_start = get_line_and_offset(&mut buf_reader, *idx).unwrap_or_else(|e| {
+                    println!("Could not get error context: {}", e);
+                    std::process::exit(exit_code);
+                });
+
+                buf_reader.seek(SeekFrom::Start(*idx as u64)).unwrap_or_else(|e| {
+                    println!("Could not get error context: {}", e);
+                    std::process::exit(exit_code);
+                });
+
+                let mut context_str = String::new();
+                buf_reader.read_line(&mut context_str).unwrap_or_else(|e| {
+                    println!("Could not get error context: {}", e);
+                    std::process::exit(exit_code);
+                });
+
+                println!(
+                    "unknown token begins at approximately line {}, offset {}\n{}",
+                    li_start.line, li_start.offset, context_str
+                );
             }
             _ => {}
         }

@@ -37,7 +37,7 @@ pub fn get_line_and_offset<T: Read>(
     file_offset: usize,
 ) -> Result<LineInfo, Box<dyn Error + Send + Sync + 'static>> {
     let mut num_lines = 1;
-    let mut offset_cur_line = 0;
+    let mut offset_cur_line = 1;
 
     for (i, b) in filebuf.bytes().enumerate() {
         if (b? as char) == '\n' {
