@@ -56,7 +56,7 @@ pub(crate) enum FolderField<'a> {
     Name(&'a str),
     Timestamp(DateTime<Utc>),
     Expanded(bool),
-    TrashFolder(bool)
+    TrashFolder(bool),
 }
 
 #[derive(Debug, PartialEq)]

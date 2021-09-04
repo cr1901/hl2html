@@ -45,7 +45,7 @@ pub(crate) HotlistOptions: ast::Options<'input> = {
 
         let si = ast::SpanInfo {
             error: None,
-            entry: (lo, hi)
+            entry: (lo, hi),
         };
 
         let encoding = encoding.ok_or(ParseError::from(
@@ -116,18 +116,18 @@ pub(crate) NoteEntry: ast::Note<'input> = {
 
         let si = ast::SpanInfo {
             error: None,
-            entry: (lo, hi)
+            entry: (lo, hi),
         };
 
-        let id = id.ok_or(ParseError::from(
-            ast::HotlistError::RequiredFieldMissing("ID", si)
-        ))?;
-        let uuid = uuid.ok_or(ParseError::from(
-            ast::HotlistError::RequiredFieldMissing("UNIQUEID", si)
-        ))?;
-        let timestamp = timestamp.ok_or(ParseError::from(
-            ast::HotlistError::RequiredFieldMissing("CREATED", si)
-        ))?;
+        let id = id.ok_or(ParseError::from(ast::HotlistError::RequiredFieldMissing(
+            "ID", si,
+        )))?;
+        let uuid = uuid.ok_or(ParseError::from(ast::HotlistError::RequiredFieldMissing(
+            "UNIQUEID", si,
+        )))?;
+        let timestamp = timestamp.ok_or(ParseError::from(ast::HotlistError::RequiredFieldMissing(
+            "CREATED", si,
+        )))?;
 
         Ok(ast::Note {
             id,
@@ -142,12 +142,15 @@ pub(crate) NoteEntry: ast::Note<'input> = {
 
 NoteField: ast::NoteField<'input> = {
     "ID" "=" <s:Integer_> =>? {
-        str::parse(s).map(ast::NoteField::Id).map_err(|_| ParseError::from(ast::HotlistError::U32OutOfRange(s)))
+        str::parse(s)
+            .map(ast::NoteField::Id)
+            .map_err(|_| ParseError::from(ast::HotlistError::U32OutOfRange(s)))
     },
 
     "UNIQUEID" "=" <s:UuidOrInt> =>? {
-        Uuid::parse_str(s).map(ast::NoteField::Uuid)
-                          .map_err(|_| ParseError::from(ast::HotlistError::InvalidUuid(s)))
+        Uuid::parse_str(s)
+             .map(ast::NoteField::Uuid)
+             .map_err(|_| ParseError::from(ast::HotlistError::InvalidUuid(s)))
     },
 
     "NAME" "=" <s:NoteBody_> => {
@@ -155,17 +158,21 @@ NoteField: ast::NoteField<'input> = {
     },
 
     "URL" "=" <s:UrlBody_> =>? {
-        Url::parse(s).map(ast::NoteField::Url)
-                     .map_err(|_| ParseError::from(ast::HotlistError::InvalidUrl(s)))
+        Url::parse(s)
+            .map(ast::NoteField::Url)
+            .map_err(|_| ParseError::from(ast::HotlistError::InvalidUrl(s)))
     },
 
     // TODO: Might in fact be an i32. Create "NegInteger" type?
     "CREATED" "=" <s:Integer_> =>? {
         // Infers type as ()... Huh?!
         // let timestamp = str::parse(s).map_err(|_| ParseError::from(ast::HotlistError::U32OutOfRange(s)))?;
-        let timestamp: u32 = str::parse(s).map_err(|_| ParseError::from(ast::HotlistError::U32OutOfRange(s)))?;
+        let timestamp: u32 =
+            str::parse(s).map_err(|_| ParseError::from(ast::HotlistError::U32OutOfRange(s)))?;
 
-        Ok(ast::NoteField::Timestamp(Utc.timestamp(timestamp as i64, 0)))
+        Ok(ast::NoteField::Timestamp(
+            Utc.timestamp(timestamp as i64, 0),
+        ))
     },
 
     "ACTIVE" "=" <s:YesOrNo> => {
@@ -173,7 +180,7 @@ NoteField: ast::NoteField<'input> = {
     }
 }
 
-pub(crate) FolderEntry: ast::Folder<'input> = {
+FolderEntry: ast::Folder<'input> = {
     <lo:@L> "#FOLDER" <ffv:FolderField*> <entries:SingleEntry*> "-" <hi:@R> =>? {
         let mut id: Option<u32> = None;
         let mut uuid: Option<Uuid> = None;
@@ -186,42 +193,42 @@ pub(crate) FolderEntry: ast::Folder<'input> = {
             match ff {
                 ast::FolderField::Id(i) => {
                     id = Some(i);
-                },
+                }
                 ast::FolderField::Uuid(u) => {
                     uuid = Some(u);
-                },
+                }
                 ast::FolderField::Name(n) => {
                     name = Some(n);
-                },
+                }
                 ast::FolderField::Timestamp(t) => {
                     timestamp = Some(t);
-                },
+                }
                 ast::FolderField::Expanded(e) => {
                     expanded = e;
-                },
+                }
                 ast::FolderField::TrashFolder(t) => {
                     trash = t;
-                },
+                }
             }
         }
 
         let si = ast::SpanInfo {
             error: None,
-            entry: (lo, hi)
+            entry: (lo, hi),
         };
 
-        let id = id.ok_or(ParseError::from(
-            ast::HotlistError::RequiredFieldMissing("ID", si)
-        ))?;
-        let uuid = uuid.ok_or(ParseError::from(
-            ast::HotlistError::RequiredFieldMissing("UNIQUEID", si)
-        ))?;
-        let name = name.ok_or(ParseError::from(
-            ast::HotlistError::RequiredFieldMissing("NAME", si)
-        ))?;
-        let timestamp = timestamp.ok_or(ParseError::from(
-            ast::HotlistError::RequiredFieldMissing("CREATED", si)
-        ))?;
+        let id = id.ok_or(ParseError::from(ast::HotlistError::RequiredFieldMissing(
+            "ID", si,
+        )))?;
+        let uuid = uuid.ok_or(ParseError::from(ast::HotlistError::RequiredFieldMissing(
+            "UNIQUEID", si,
+        )))?;
+        let name = name.ok_or(ParseError::from(ast::HotlistError::RequiredFieldMissing(
+            "NAME", si,
+        )))?;
+        let timestamp = timestamp.ok_or(ParseError::from(ast::HotlistError::RequiredFieldMissing(
+            "CREATED", si,
+        )))?;
 
         Ok(ast::Folder {
             id,
@@ -230,19 +237,22 @@ pub(crate) FolderEntry: ast::Folder<'input> = {
             timestamp,
             expanded,
             trash,
-            entries
+            entries,
         })
     }
 }
 
 FolderField: ast::FolderField<'input> = {
     "ID" "=" <s:Integer_> =>? {
-        str::parse(s).map(ast::FolderField::Id).map_err(|_| ParseError::from(ast::HotlistError::U32OutOfRange(s)))
+        str::parse(s)
+            .map(ast::FolderField::Id)
+            .map_err(|_| ParseError::from(ast::HotlistError::U32OutOfRange(s)))
     },
 
     "UNIQUEID" "=" <s:UuidOrInt> =>? {
-        Uuid::parse_str(s).map(ast::FolderField::Uuid)
-                          .map_err(|_| ParseError::from(ast::HotlistError::InvalidUuid(s)))
+        Uuid::parse_str(s)
+             .map(ast::FolderField::Uuid)
+             .map_err(|_| ParseError::from(ast::HotlistError::InvalidUuid(s)))
     },
 
     "NAME" "=" <s:NoteBody_> => {
@@ -251,7 +261,8 @@ FolderField: ast::FolderField<'input> = {
 
     // TODO: Might in fact be an i32. Create "NegInteger" type?
     "CREATED" "=" <s:Integer_> =>? {
-        let timestamp: u32 = str::parse(s).map_err(|_| ParseError::from(ast::HotlistError::U32OutOfRange(s)))?;
+        let timestamp: u32 =
+            str::parse(s).map_err(|_| ParseError::from(ast::HotlistError::U32OutOfRange(s)))?;
 
         Ok(ast::FolderField::Timestamp(Utc.timestamp(timestamp as i64, 0)))
     },
