@@ -33,7 +33,7 @@ pub fn parse_hotlist_from_file<'a, T: AsRef<Path>>(
 }
 
 pub fn get_line_and_offset<T: Read>(
-    filebuf: T,
+    filebuf: &mut T,
     file_offset: usize,
 ) -> Result<LineInfo, Box<dyn Error + Send + Sync + 'static>> {
     let mut num_lines = 1;

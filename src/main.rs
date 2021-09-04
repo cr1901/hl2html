@@ -9,9 +9,8 @@ use parser::*;
 use argh::FromArgs;
 use lalrpop_util::ParseError;
 use std::error::Error;
-use std::fmt;
 use std::fs::File;
-use std::io::BufReader;
+use std::io::{BufReader, Read, Seek, SeekFrom};
 use std::path::Path;
 
 #[derive(FromArgs, PartialEq, Debug)]
@@ -54,8 +53,6 @@ fn print_error_and_exit<'a, T: AsRef<Path>>(
         )
     };
 
-    let orig_err = curr_err.clone();
-
     while printing {
         if let Some(new_err) = curr_err.source() {
             curr_err = new_err;
@@ -83,15 +80,33 @@ fn print_error_and_exit<'a, T: AsRef<Path>>(
             ParseError::User {
                 error: LexerError::UserError(hl_err),
             } => match hl_err {
-                HotlistError::RequiredFieldMissing(_, SpanInfo { error, entry }) => {
-                    let li_start = get_line_and_offset(buf_reader, entry.0).unwrap_or_else(|e| {
+                HotlistError::RequiredFieldMissing(_, SpanInfo { error: _, entry }) => {
+                    let li_start = get_line_and_offset(&mut buf_reader, entry.0).unwrap_or_else(|e| {
                         println!("Could not get error context: {}", e);
                         std::process::exit(exit_code);
                     });
 
+                    let li_end = get_line_and_offset(&mut buf_reader, entry.1).unwrap_or_else(|e| {
+                        println!("Could not get error context: {}", e);
+                        std::process::exit(exit_code);
+                    });
+
+                    buf_reader.seek(SeekFrom::Start(entry.0 as u64)).unwrap_or_else(|e| {
+                        println!("Could not get error context: {}", e);
+                        std::process::exit(exit_code);
+                    });
+
+                    let context_len = entry.1 - entry.0;
+                    let mut vec = Vec::with_capacity(context_len);
+                    buf_reader.by_ref().take(context_len as u64).read_to_end(&mut vec).unwrap_or_else(|e| {
+                        println!("Could not get error context: {}", e);
+                        std::process::exit(exit_code);
+                    });
+                    let context_str = String::from_utf8_lossy(&vec);
+
                     println!(
-                        "error begins on approximately line {}, offset {}",
-                        li_start.line, li_start.offset
+                        "error begins on approximately line {}, offset {}\n{}",
+                        li_start.line, li_start.offset, context_str
                     );
                 }
                 _ => {}
