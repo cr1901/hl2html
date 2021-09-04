@@ -32,6 +32,7 @@ pub enum Tok<'input> {
     No,              // "NO"
     FolderHeader,    // "#FOLDER"
     FolderEnd,       // "-"
+    Active,          // "ACTIVE"
 
     // Regex-based
     Version(&'input str),
@@ -57,12 +58,13 @@ impl<'input> fmt::Display for Tok<'input> {
             Tok::Url => write!(f, r#"URL field ("URL")"#),
             Tok::Created => write!(f, r#"Timestamp field ("CREATED")"#),
             Tok::Comma => write!(f, r#"Comma (",")"#),
-            Tok::Expanded => write!(f, r#"Expander ("YES")"#),
+            Tok::Expanded => write!(f, r#"Expanded ("EXPANDED")"#),
             Tok::TrashFolder => write!(f, r#"Trash folder ("TRASH FOLDER")"#),
             Tok::Yes => write!(f, r#"Yes/True ("YES")"#),
             Tok::No => write!(f, r#"No/False ("NO")"#),
             Tok::FolderHeader => write!(f, r##"Folder header ("#FOLDER")"##),
             Tok::FolderEnd => write!(f, r#"End of folder delimiter ("-")"#),
+            Tok::Active => write!(f, r#"Active ("ACTIVE")"#),
 
             // Regex-based
             Tok::Version(ver) => write!(f, r#"Version ("{}")"#, ver),
@@ -134,6 +136,7 @@ lexer! {
         "NO" = Tok::No,
         "#FOLDER" = Tok::FolderHeader,
         "-" = Tok::FolderEnd,
+        "ACTIVE" = Tok::Active,
 
         // Regexes
         $integer_re => |lexer| {

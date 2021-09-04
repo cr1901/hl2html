@@ -86,6 +86,7 @@ pub(crate) NoteEntry: ast::Note<'input> = {
         let mut contents: Option<&'input str> = None;
         let mut url: Option<Url> = None;
         let mut timestamp: Option<DateTime<Utc>> = None;
+        let mut active: bool = false;
 
         for nf in nfv {
             match nf {
@@ -102,7 +103,10 @@ pub(crate) NoteEntry: ast::Note<'input> = {
                     url = Some(u);
                 },
                 ast::NoteField::Timestamp(t) => {
-                    timestamp = Some(t)
+                    timestamp = Some(t);
+                },
+                ast::NoteField::Active(a) => {
+                    active = a;
                 }
             }
         }
@@ -127,7 +131,8 @@ pub(crate) NoteEntry: ast::Note<'input> = {
             uuid,
             contents,
             url,
-            timestamp
+            timestamp,
+            active
         })
     }
 }
@@ -158,7 +163,16 @@ NoteField: ast::NoteField<'input> = {
         let timestamp: u32 = str::parse(s).map_err(|_| ParseError::from(ast::HotlistError::U32OutOfRange(s)))?;
 
         Ok(ast::NoteField::Timestamp(Utc.timestamp(timestamp as i64, 0)))
+    },
+
+    "ACTIVE" "=" <s:YesOrNo> => {
+        ast::NoteField::Active(s)
     }
+}
+
+YesOrNo: bool = {
+    "YES" => true,
+    "NO" => false
 }
 
 Encoding: ast::Encoding<'input> = {
@@ -202,6 +216,7 @@ extern {
         "NO" => lexer::Tok::No,
         "FOLDER" => lexer::Tok::FolderHeader,
         "-" => lexer::Tok::FolderEnd,
+        "ACTIVE" => lexer::Tok::Active,
 
         // Regex-based
         Version_ => lexer::Tok::Version(<&'input str>),

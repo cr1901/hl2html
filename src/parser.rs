@@ -148,7 +148,8 @@ mod tests {
         \tUNIQUEID=75356378DB08C2429F4BE860ED92596F\n\
         \tNAME=This is a fake note with \x02\x02an encoded linebreak.\n\
         \tURL=http://www.example.com\n\
-        \tCREATED=1322363353\n";
+        \tCREATED=1322363353\n\
+        \tACTIVE=NO\n";
 
         let lexer = lexer::Lexer::new(inp);
         assert_eq!(
@@ -158,7 +159,8 @@ mod tests {
                 uuid: Uuid::parse_str("75356378DB08C2429F4BE860ED92596F").unwrap(),
                 contents: Some("This is a fake note with \x02\x02an encoded linebreak."),
                 url: Some(Url::parse("http://www.example.com").unwrap()),
-                timestamp: Utc.timestamp(1322363353, 0)
+                timestamp: Utc.timestamp(1322363353, 0),
+                active: false
             }
         );
     }
@@ -177,7 +179,8 @@ mod tests {
         \tUNIQUEID=FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\n\
         \tNAME=Bar.\n\
         \tURL=http://www.example.org/path/to/file\n\
-        \tCREATED=2147483647\n";
+        \tCREATED=2147483647\n\
+        \tACTIVE=YES\n";
 
         let lexer = lexer::Lexer::new(inp);
         assert_eq!(
@@ -190,14 +193,16 @@ mod tests {
                     uuid: Uuid::parse_str("00000000000000000000000000000000").unwrap(),
                     contents: Some("Foo."),
                     url: Some(Url::parse("https://www.example.com/a/random/path").unwrap()),
-                    timestamp: Utc.timestamp(0, 0)
+                    timestamp: Utc.timestamp(0, 0),
+                    active: false
                 }),
                 ast::EntryKind::Note(ast::Note {
                     id: 2,
                     uuid: Uuid::parse_str("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF").unwrap(),
                     contents: Some("Bar."),
                     url: Some(Url::parse("http://www.example.org/path/to/file").unwrap()),
-                    timestamp: Utc.timestamp(2147483647, 0)
+                    timestamp: Utc.timestamp(2147483647, 0),
+                    active: true
                 }),
             ]
         );

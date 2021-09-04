@@ -56,6 +56,7 @@ pub struct Note<'a> {
     pub contents: Option<&'a str>,
     pub url: Option<Url>,
     pub timestamp: DateTime<Utc>,
+    pub active: bool,
 }
 
 #[derive(Debug, PartialEq)]
@@ -65,6 +66,7 @@ pub(crate) enum NoteField<'a> {
     Contents(&'a str),
     Url(Url),
     Timestamp(DateTime<Utc>),
+    Active(bool),
 }
 
 // We squirrel this away in LexerError's UserError variant, because LexerError is already
