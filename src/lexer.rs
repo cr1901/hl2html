@@ -100,7 +100,7 @@ lexer! {
     // Rule for everything except slurping up note body and URLs.
     rule Init {
         // Whitespace should be skipped when possible.
-        [' ' '\t' '\n']+,
+        [' ' '\t' '\n' '\r']+,
 
         "Opera Hotlist version" = Tok::HotlistVersion,
         "Options:" = Tok::Options,
