@@ -2,7 +2,7 @@ mod ast;
 mod lexer;
 mod parser;
 
-use ast::HotlistError;
+use ast::{HotlistError, SpanInfo};
 use lexer::LexerError;
 use parser::*;
 
@@ -46,21 +46,35 @@ fn print_error_and_exit<'a>(err: Box<dyn Error + Send + Sync + 'a>, exit_code: i
     };
 
     while printing {
-        println!("{}", &curr_err);
-
+        // While walking the errors, handle specific err types specially.
         if let Some(p_err) = curr_err.downcast_ref::<ParseError<usize, lexer::Tok<'static>, LexerError<'static>>>() {
             if let Some(new_err) = parse_error_source(&p_err) {
                 curr_err = new_err;
             } else {
+                println!("{}", &curr_err);
                 printing = false;
             }
 
             continue;
+        } else if let Some(u_err) = curr_err.downcast_ref::<HotlistError<'static>>() {
+            println!("{}", &u_err);
+            match u_err {
+                HotlistError::RequiredFieldMissing(_, SpanInfo { error, entry }) => {
+                    unimplemented!()
+                },
+                _ => {}
+            }
+
+            printing = false;
+            continue;
         }
 
+        // Default actions: get next error in chain, if None, print, otherwise defer to next
+        // level error.
         if let Some(new_err) = curr_err.source() {
             curr_err = new_err;
         } else {
+            println!("{}", &curr_err);
             printing = false;
         }
     }
@@ -68,11 +82,16 @@ fn print_error_and_exit<'a>(err: Box<dyn Error + Send + Sync + 'a>, exit_code: i
     std::process::exit(exit_code)
 }
 
-// ParseError does not provide a source() implementation, so I provide one here for the time
-// being.
+// ParseError does not provide a source() implementation, so I provide one in this crate. I don't
+// think a from conversion from a newtype is possible here because I only have access to refs to
+// ParseError, and the lifetime would become part of the newtype. This prevents me from converting
+// back to Option<&'a (dyn Error + 'static)> without another horrific transmute.
+//
+// I will implement a ParseErrorWrapper newtype, if I figure out how to implement the conversion
+// properly in the future.
 fn parse_error_source<'a>(p_err: &'a ParseError<usize, lexer::Tok<'static>, LexerError<'static>>) -> Option<&'a (dyn Error + 'static)> {
     match p_err {
-        ParseError::User { error: ref u_err } => {
+        ParseError::User { error: u_err } => {
             Some(u_err)
         },
         _ => None
