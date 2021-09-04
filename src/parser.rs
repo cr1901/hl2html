@@ -112,7 +112,7 @@ mod tests {
             hotlist::HotlistOptionsParser::new()
                 .parse(inp, lexer)
                 .unwrap_err(),
-            ast::HotlistError::RequiredFieldMissing("encoding").into()
+            ast::HotlistError::RequiredFieldMissing("encoding", ast::SpanInfo { error: None, entry: (0, 8)}).into()
         );
     }
 
@@ -149,8 +149,8 @@ mod tests {
             ast::Note {
                 id: 18,
                 uuid: Uuid::parse_str("75356378DB08C2429F4BE860ED92596F").unwrap(),
-                contents: "This is a fake note with \x02\x02an encoded linebreak.",
-                url: Url::parse("http://www.example.com").unwrap(),
+                contents: Some("This is a fake note with \x02\x02an encoded linebreak."),
+                url: Some(Url::parse("http://www.example.com").unwrap()),
                 timestamp: Utc.timestamp(1322363353, 0)
             }
         );
@@ -181,15 +181,15 @@ mod tests {
                 ast::EntryKind::Note(ast::Note {
                     id: 1,
                     uuid: Uuid::parse_str("00000000000000000000000000000000").unwrap(),
-                    contents: "Foo.",
-                    url: Url::parse("https://www.example.com/a/random/path").unwrap(),
+                    contents: Some("Foo."),
+                    url: Some(Url::parse("https://www.example.com/a/random/path").unwrap()),
                     timestamp: Utc.timestamp(0, 0)
                 }),
                 ast::EntryKind::Note(ast::Note {
                     id: 2,
                     uuid: Uuid::parse_str("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF").unwrap(),
-                    contents: "Bar.",
-                    url: Url::parse("http://www.example.org/path/to/file").unwrap(),
+                    contents: Some("Bar."),
+                    url: Some(Url::parse("http://www.example.org/path/to/file").unwrap()),
                     timestamp: Utc.timestamp(2147483647, 0)
                 }),
             ]

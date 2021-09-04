@@ -53,8 +53,8 @@ pub struct Folder<'a> {
 pub struct Note<'a> {
     pub id: u32,
     pub uuid: Uuid,
-    pub contents: &'a str,
-    pub url: Url,
+    pub contents: Option<&'a str>,
+    pub url: Option<Url>,
     pub timestamp: DateTime<Utc>,
 }
 
