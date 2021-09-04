@@ -9,6 +9,10 @@ use parser::*;
 use argh::FromArgs;
 use lalrpop_util::ParseError;
 use std::error::Error;
+use std::fmt;
+use std::fs::File;
+use std::io::BufReader;
+use std::path::Path;
 
 #[derive(FromArgs, PartialEq, Debug)]
 /// A command with positional arguments.
@@ -25,12 +29,12 @@ fn main() {
         Ok(hl) => hl,
         Err(e) => {
             println!("Error while parsing hotlist file {}:", args.path);
-            print_error_and_exit(e, 1);
+            print_error_and_exit(e, &args.path, 1);
         }
     };
 }
 
-fn print_error_and_exit<'a>(err: Box<dyn Error + Send + Sync + 'a>, exit_code: i32) -> ! {
+fn print_error_and_exit<'a, T: AsRef<Path>>(err: Box<dyn Error + Send + Sync + 'a>, filename: T, exit_code: i32) -> ! {
     let mut printing = true;
     // Safety:
     // * Only place we want to downcast in the codebase.
@@ -45,32 +49,9 @@ fn print_error_and_exit<'a>(err: Box<dyn Error + Send + Sync + 'a>, exit_code: i
                               &(dyn Error + Send + Sync + 'static)>(&*err)
     };
 
+    let orig_err = curr_err.clone();
+
     while printing {
-        // While walking the errors, handle specific err types specially.
-        if let Some(p_err) = curr_err.downcast_ref::<ParseError<usize, lexer::Tok<'static>, LexerError<'static>>>() {
-            if let Some(new_err) = parse_error_source(&p_err) {
-                curr_err = new_err;
-            } else {
-                println!("{}", &curr_err);
-                printing = false;
-            }
-
-            continue;
-        } else if let Some(u_err) = curr_err.downcast_ref::<HotlistError<'static>>() {
-            println!("{}", &u_err);
-            match u_err {
-                HotlistError::RequiredFieldMissing(_, SpanInfo { error, entry }) => {
-                    unimplemented!()
-                },
-                _ => {}
-            }
-
-            printing = false;
-            continue;
-        }
-
-        // Default actions: get next error in chain, if None, print, otherwise defer to next
-        // level error.
         if let Some(new_err) = curr_err.source() {
             curr_err = new_err;
         } else {
@@ -79,21 +60,38 @@ fn print_error_and_exit<'a>(err: Box<dyn Error + Send + Sync + 'a>, exit_code: i
         }
     }
 
-    std::process::exit(exit_code)
-}
+    // Print location information about the error if possible.
+    if let Some(p_err) = curr_err.downcast_ref::<ParseError<usize, lexer::Tok<'static>, LexerError<'static>>>() {
+        let file = File::open(filename.as_ref()).unwrap_or_else(
+            |e| {
+                println!("Could open {} to get error context: {}", filename.as_ref().display(), e);
+                std::process::exit(exit_code);
+            }
+        );
+        let mut buf_reader = BufReader::new(file);
 
-// ParseError does not provide a source() implementation, so I provide one in this crate. I don't
-// think a from conversion from a newtype is possible here because I only have access to refs to
-// ParseError, and the lifetime would become part of the newtype. This prevents me from converting
-// back to Option<&'a (dyn Error + 'static)> without another horrific transmute.
-//
-// I will implement a ParseErrorWrapper newtype, if I figure out how to implement the conversion
-// properly in the future.
-fn parse_error_source<'a>(p_err: &'a ParseError<usize, lexer::Tok<'static>, LexerError<'static>>) -> Option<&'a (dyn Error + 'static)> {
-    match p_err {
-        ParseError::User { error: u_err } => {
-            Some(u_err)
-        },
-        _ => None
+        match p_err {
+            ParseError::User { error: LexerError::UserError(hl_err) } => {
+                match hl_err {
+                    HotlistError::RequiredFieldMissing(_, SpanInfo { error, entry }) => {
+                        let li_start = get_line_and_offset(buf_reader, entry.0).unwrap_or_else(
+                            |e| {
+                                println!("Could not get error context: {}", e);
+                                std::process::exit(exit_code);
+                            }
+                        );
+
+                        println!("error begins on approximately line {}, offset {}", li_start.line, li_start.offset);
+                    },
+                    _ => { }
+                }
+            },
+            ParseError::User { error: LexerError::LexerError { char_idx: _ } } => {
+                unimplemented!()
+            },
+            _ => { }
+        }
     }
+
+    std::process::exit(exit_code);
 }

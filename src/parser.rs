@@ -10,6 +10,11 @@ use std::path::Path;
 use lalrpop_util::lalrpop_mod;
 lalrpop_mod!(pub hotlist); // synthesized by LALRPOP
 
+pub struct LineInfo {
+    pub line: usize,
+    pub offset: usize
+}
+
 pub fn parse_hotlist_from_file<'a, T: AsRef<Path>>(filename: T, in_buf: &'a mut String) -> Result<ast::Hotlist<'a>, Box<dyn Error + Send + Sync + 'a>> {
     let file = File::open(filename)?;
     let mut buf_reader = BufReader::new(file);
@@ -22,6 +27,27 @@ pub fn parse_hotlist_from_file<'a, T: AsRef<Path>>(filename: T, in_buf: &'a mut 
     let hotlist = parser.parse(in_buf, lexer)?;
 
     Ok(hotlist)
+}
+
+pub fn get_line_and_offset<T: Read>(filebuf: T, file_offset: usize) -> Result<LineInfo, Box<dyn Error + Send + Sync + 'static>> {
+    let mut num_lines = 1;
+    let mut offset_cur_line = 0;
+
+    for (i, b) in filebuf.bytes().enumerate() {
+        if (b? as char) == '\n' {
+            num_lines = num_lines + 1;
+            offset_cur_line = i + 1;
+        }
+
+        if i >= file_offset {
+            break;
+        }
+    }
+
+    Ok(LineInfo {
+        line: num_lines,
+        offset: file_offset - offset_cur_line
+    })
 }
 
 #[cfg(test)]
