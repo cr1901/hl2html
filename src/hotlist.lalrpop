@@ -76,6 +76,9 @@ pub(crate) SingleOp: ast::SingleOp<'input> = {
 SingleEntry: ast::EntryKind<'input> = {
     <n:NoteEntry> => {
         ast::EntryKind::Note(n)
+    },
+    <f:FolderEntry> => {
+        ast::EntryKind::Folder(f)
     }
 }
 
@@ -170,6 +173,98 @@ NoteField: ast::NoteField<'input> = {
     }
 }
 
+pub(crate) FolderEntry: ast::Folder<'input> = {
+    <lo:@L> "#FOLDER" <ffv:FolderField*> <entries:SingleEntry*> "-" <hi:@R> =>? {
+        let mut id: Option<u32> = None;
+        let mut uuid: Option<Uuid> = None;
+        let mut name: Option<&'input str> = None;
+        let mut timestamp: Option<DateTime<Utc>> = None;
+        let mut expanded: bool = false;
+        let mut trash: bool = false;
+
+        for ff in ffv {
+            match ff {
+                ast::FolderField::Id(i) => {
+                    id = Some(i);
+                },
+                ast::FolderField::Uuid(u) => {
+                    uuid = Some(u);
+                },
+                ast::FolderField::Name(n) => {
+                    name = Some(n);
+                },
+                ast::FolderField::Timestamp(t) => {
+                    timestamp = Some(t);
+                },
+                ast::FolderField::Expanded(e) => {
+                    expanded = e;
+                },
+                ast::FolderField::TrashFolder(t) => {
+                    trash = t;
+                },
+            }
+        }
+
+        let si = ast::SpanInfo {
+            error: None,
+            entry: (lo, hi)
+        };
+
+        let id = id.ok_or(ParseError::from(
+            ast::HotlistError::RequiredFieldMissing("ID", si)
+        ))?;
+        let uuid = uuid.ok_or(ParseError::from(
+            ast::HotlistError::RequiredFieldMissing("UNIQUEID", si)
+        ))?;
+        let name = name.ok_or(ParseError::from(
+            ast::HotlistError::RequiredFieldMissing("NAME", si)
+        ))?;
+        let timestamp = timestamp.ok_or(ParseError::from(
+            ast::HotlistError::RequiredFieldMissing("CREATED", si)
+        ))?;
+
+        Ok(ast::Folder {
+            id,
+            uuid,
+            name,
+            timestamp,
+            expanded,
+            trash,
+            entries
+        })
+    }
+}
+
+FolderField: ast::FolderField<'input> = {
+    "ID" "=" <s:Integer_> =>? {
+        str::parse(s).map(ast::FolderField::Id).map_err(|_| ParseError::from(ast::HotlistError::U32OutOfRange(s)))
+    },
+
+    "UNIQUEID" "=" <s:UuidOrInt> =>? {
+        Uuid::parse_str(s).map(ast::FolderField::Uuid)
+                          .map_err(|_| ParseError::from(ast::HotlistError::InvalidUuid(s)))
+    },
+
+    "NAME" "=" <s:NoteBody_> => {
+        ast::FolderField::Name(s)
+    },
+
+    // TODO: Might in fact be an i32. Create "NegInteger" type?
+    "CREATED" "=" <s:Integer_> =>? {
+        let timestamp: u32 = str::parse(s).map_err(|_| ParseError::from(ast::HotlistError::U32OutOfRange(s)))?;
+
+        Ok(ast::FolderField::Timestamp(Utc.timestamp(timestamp as i64, 0)))
+    },
+
+    "EXPANDED" "=" <s:YesOrNo> => {
+        ast::FolderField::Expanded(s)
+    },
+
+    "TRASH FOLDER" "=" <s:YesOrNo> => {
+        ast::FolderField::TrashFolder(s)
+    }
+}
+
 YesOrNo: bool = {
     "YES" => true,
     "NO" => false
@@ -214,7 +309,7 @@ extern {
         "TRASH FOLDER"  => lexer::Tok::TrashFolder,
         "YES"  => lexer::Tok::Yes,
         "NO" => lexer::Tok::No,
-        "FOLDER" => lexer::Tok::FolderHeader,
+        "#FOLDER" => lexer::Tok::FolderHeader,
         "-" => lexer::Tok::FolderEnd,
         "ACTIVE" => lexer::Tok::Active,
 

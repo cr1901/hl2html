@@ -50,6 +50,16 @@ pub struct Folder<'a> {
 }
 
 #[derive(Debug, PartialEq)]
+pub(crate) enum FolderField<'a> {
+    Id(u32),
+    Uuid(Uuid),
+    Name(&'a str),
+    Timestamp(DateTime<Utc>),
+    Expanded(bool),
+    TrashFolder(bool)
+}
+
+#[derive(Debug, PartialEq)]
 pub struct Note<'a> {
     pub id: u32,
     pub uuid: Uuid,
