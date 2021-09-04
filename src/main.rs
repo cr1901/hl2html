@@ -77,6 +77,20 @@ fn print_error_and_exit<'a, T: AsRef<Path>>(
         let mut buf_reader = BufReader::new(file);
 
         match p_err {
+            ParseError::UnrecognizedToken {
+                token: (start, _, _end),
+                expected: _
+            } => {
+                let (context_str, (li_start, _)) = get_context(&mut buf_reader, *start, None).unwrap_or_else(|e| {
+                    println!("Could not get error context: {}", e);
+                    std::process::exit(exit_code);
+                });
+
+                println!(
+                    "unknown token begins at approximately line {}, offset {}\n{}",
+                    li_start.line, li_start.offset, context_str
+                );
+            },
             ParseError::User {
                 error: LexerError::UserError(hl_err),
             } => match hl_err {
@@ -114,18 +128,7 @@ fn print_error_and_exit<'a, T: AsRef<Path>>(
             ParseError::User {
                 error: LexerError::LexerError { char_idx: idx },
             } => {
-                let li_start = get_line_and_offset(&mut buf_reader, *idx).unwrap_or_else(|e| {
-                    println!("Could not get error context: {}", e);
-                    std::process::exit(exit_code);
-                });
-
-                buf_reader.seek(SeekFrom::Start(*idx as u64)).unwrap_or_else(|e| {
-                    println!("Could not get error context: {}", e);
-                    std::process::exit(exit_code);
-                });
-
-                let mut context_str = String::new();
-                buf_reader.read_line(&mut context_str).unwrap_or_else(|e| {
+                let (context_str, (li_start, _)) = get_context(&mut buf_reader, *idx, None).unwrap_or_else(|e| {
                     println!("Could not get error context: {}", e);
                     std::process::exit(exit_code);
                 });
@@ -140,4 +143,13 @@ fn print_error_and_exit<'a, T: AsRef<Path>>(
     }
 
     std::process::exit(exit_code);
+}
+
+fn get_context<R: Read + Seek>(buf_reader: &mut BufReader<R>, start: usize, _end: Option<i64>) -> Result<(String, (LineInfo, Option<LineInfo>)), Box<dyn Error + Send + Sync + 'static>> {
+    let li_start = get_line_and_offset(buf_reader, start)?;
+    buf_reader.seek(SeekFrom::Start(start as u64))?;
+
+    let mut context_str = String::new();
+    buf_reader.read_line(&mut context_str)?;
+    Ok((context_str, (li_start, None)))
 }
