@@ -58,7 +58,7 @@ impl<'input> fmt::Display for Tok<'input> {
             Tok::Created => write!(f, r#"Timestamp field ("CREATED")"#),
             Tok::Comma => write!(f, r#"Comma (",")"#),
             Tok::Expanded => write!(f, r#"Expander ("YES")"#),
-            Tok::TrashFolder=> write!(f, r#"Trash folder ("TRASH FOLDER")"#),
+            Tok::TrashFolder => write!(f, r#"Trash folder ("TRASH FOLDER")"#),
             Tok::Yes => write!(f, r#"Yes/True ("YES")"#),
             Tok::No => write!(f, r#"No/False ("NO")"#),
             Tok::FolderHeader => write!(f, r##"Folder header ("#FOLDER")"##),
@@ -176,8 +176,10 @@ lexer! {
 impl<'input> fmt::Display for LexerError<'input> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            LexerError::LexerError { char_idx } => write!(f, "unknown token starting at offset {}", char_idx),
-            LexerError::UserError(e) => e.fmt(f)
+            LexerError::LexerError { char_idx } => {
+                write!(f, "unknown token starting at offset {}", char_idx)
+            }
+            LexerError::UserError(e) => e.fmt(f),
         }
     }
 }
@@ -185,10 +187,8 @@ impl<'input> fmt::Display for LexerError<'input> {
 impl error::Error for LexerError<'static> {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            LexerError::UserError(e) => {
-                Some(e)
-            },
-            _ => None
+            LexerError::UserError(e) => Some(e),
+            _ => None,
         }
     }
 }

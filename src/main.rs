@@ -34,7 +34,11 @@ fn main() {
     };
 }
 
-fn print_error_and_exit<'a, T: AsRef<Path>>(err: Box<dyn Error + Send + Sync + 'a>, filename: T, exit_code: i32) -> ! {
+fn print_error_and_exit<'a, T: AsRef<Path>>(
+    err: Box<dyn Error + Send + Sync + 'a>,
+    filename: T,
+    exit_code: i32,
+) -> ! {
     let mut printing = true;
     // Safety:
     // * Only place we want to downcast in the codebase.
@@ -45,8 +49,9 @@ fn print_error_and_exit<'a, T: AsRef<Path>>(err: Box<dyn Error + Send + Sync + '
     // * No references escape this function- so we can't type pun non-static lifetimes as
     //   static lifetimes.
     let mut curr_err: &(dyn Error + 'static) = &*unsafe {
-        std::mem::transmute::<&(dyn Error + Send + Sync + 'a),
-                              &(dyn Error + Send + Sync + 'static)>(&*err)
+        std::mem::transmute::<&(dyn Error + Send + Sync + 'a), &(dyn Error + Send + Sync + 'static)>(
+            &*err,
+        )
     };
 
     let orig_err = curr_err.clone();
@@ -61,35 +66,42 @@ fn print_error_and_exit<'a, T: AsRef<Path>>(err: Box<dyn Error + Send + Sync + '
     }
 
     // Print location information about the error if possible.
-    if let Some(p_err) = curr_err.downcast_ref::<ParseError<usize, lexer::Tok<'static>, LexerError<'static>>>() {
-        let file = File::open(filename.as_ref()).unwrap_or_else(
-            |e| {
-                println!("Could open {} to get error context: {}", filename.as_ref().display(), e);
-                std::process::exit(exit_code);
-            }
-        );
+    if let Some(p_err) =
+        curr_err.downcast_ref::<ParseError<usize, lexer::Tok<'static>, LexerError<'static>>>()
+    {
+        let file = File::open(filename.as_ref()).unwrap_or_else(|e| {
+            println!(
+                "Could open {} to get error context: {}",
+                filename.as_ref().display(),
+                e
+            );
+            std::process::exit(exit_code);
+        });
         let mut buf_reader = BufReader::new(file);
 
         match p_err {
-            ParseError::User { error: LexerError::UserError(hl_err) } => {
-                match hl_err {
-                    HotlistError::RequiredFieldMissing(_, SpanInfo { error, entry }) => {
-                        let li_start = get_line_and_offset(buf_reader, entry.0).unwrap_or_else(
-                            |e| {
-                                println!("Could not get error context: {}", e);
-                                std::process::exit(exit_code);
-                            }
-                        );
+            ParseError::User {
+                error: LexerError::UserError(hl_err),
+            } => match hl_err {
+                HotlistError::RequiredFieldMissing(_, SpanInfo { error, entry }) => {
+                    let li_start = get_line_and_offset(buf_reader, entry.0).unwrap_or_else(|e| {
+                        println!("Could not get error context: {}", e);
+                        std::process::exit(exit_code);
+                    });
 
-                        println!("error begins on approximately line {}, offset {}", li_start.line, li_start.offset);
-                    },
-                    _ => { }
+                    println!(
+                        "error begins on approximately line {}, offset {}",
+                        li_start.line, li_start.offset
+                    );
                 }
+                _ => {}
             },
-            ParseError::User { error: LexerError::LexerError { char_idx: _ } } => {
+            ParseError::User {
+                error: LexerError::LexerError { char_idx: _ },
+            } => {
                 unimplemented!()
-            },
-            _ => { }
+            }
+            _ => {}
         }
     }
 

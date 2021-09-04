@@ -3,8 +3,8 @@ use crate::lexer;
 
 use std::error::Error;
 use std::fs::File;
-use std::io::BufReader;
 use std::io::prelude::*;
+use std::io::BufReader;
 use std::path::Path;
 
 use lalrpop_util::lalrpop_mod;
@@ -12,10 +12,13 @@ lalrpop_mod!(pub hotlist); // synthesized by LALRPOP
 
 pub struct LineInfo {
     pub line: usize,
-    pub offset: usize
+    pub offset: usize,
 }
 
-pub fn parse_hotlist_from_file<'a, T: AsRef<Path>>(filename: T, in_buf: &'a mut String) -> Result<ast::Hotlist<'a>, Box<dyn Error + Send + Sync + 'a>> {
+pub fn parse_hotlist_from_file<'a, T: AsRef<Path>>(
+    filename: T,
+    in_buf: &'a mut String,
+) -> Result<ast::Hotlist<'a>, Box<dyn Error + Send + Sync + 'a>> {
     let file = File::open(filename)?;
     let mut buf_reader = BufReader::new(file);
 
@@ -29,7 +32,10 @@ pub fn parse_hotlist_from_file<'a, T: AsRef<Path>>(filename: T, in_buf: &'a mut 
     Ok(hotlist)
 }
 
-pub fn get_line_and_offset<T: Read>(filebuf: T, file_offset: usize) -> Result<LineInfo, Box<dyn Error + Send + Sync + 'static>> {
+pub fn get_line_and_offset<T: Read>(
+    filebuf: T,
+    file_offset: usize,
+) -> Result<LineInfo, Box<dyn Error + Send + Sync + 'static>> {
     let mut num_lines = 1;
     let mut offset_cur_line = 0;
 
@@ -46,7 +52,7 @@ pub fn get_line_and_offset<T: Read>(filebuf: T, file_offset: usize) -> Result<Li
 
     Ok(LineInfo {
         line: num_lines,
-        offset: file_offset - offset_cur_line
+        offset: file_offset - offset_cur_line,
     })
 }
 
@@ -56,7 +62,7 @@ mod tests {
     use crate::ast;
     use crate::lexer;
 
-    use chrono::{Utc, TimeZone};
+    use chrono::{TimeZone, Utc};
     use lalrpop_util::ParseError;
     use url::Url;
     use uuid::Uuid;
@@ -139,9 +145,7 @@ mod tests {
 
         let lexer = lexer::Lexer::new(inp);
         assert_eq!(
-            hotlist::NoteEntryParser::new()
-                .parse(inp, lexer)
-                .unwrap(),
+            hotlist::NoteEntryParser::new().parse(inp, lexer).unwrap(),
             ast::Note {
                 id: 18,
                 uuid: Uuid::parse_str("75356378DB08C2429F4BE860ED92596F").unwrap(),
@@ -174,25 +178,20 @@ mod tests {
                 .parse(inp, lexer)
                 .unwrap(),
             &[
-                ast::EntryKind::Note(
-                    ast::Note {
-                        id: 1,
-                        uuid: Uuid::parse_str("00000000000000000000000000000000").unwrap(),
-                        contents: "Foo.",
-                        url: Url::parse("https://www.example.com/a/random/path").unwrap(),
-                        timestamp: Utc.timestamp(0, 0)
-                    }
-                ),
-
-                ast::EntryKind::Note(
-                    ast::Note {
-                        id: 2,
-                        uuid: Uuid::parse_str("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF").unwrap(),
-                        contents: "Bar.",
-                        url: Url::parse("http://www.example.org/path/to/file").unwrap(),
-                        timestamp: Utc.timestamp(2147483647, 0)
-                    }
-                ),
+                ast::EntryKind::Note(ast::Note {
+                    id: 1,
+                    uuid: Uuid::parse_str("00000000000000000000000000000000").unwrap(),
+                    contents: "Foo.",
+                    url: Url::parse("https://www.example.com/a/random/path").unwrap(),
+                    timestamp: Utc.timestamp(0, 0)
+                }),
+                ast::EntryKind::Note(ast::Note {
+                    id: 2,
+                    uuid: Uuid::parse_str("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF").unwrap(),
+                    contents: "Bar.",
+                    url: Url::parse("http://www.example.org/path/to/file").unwrap(),
+                    timestamp: Utc.timestamp(2147483647, 0)
+                }),
             ]
         );
     }

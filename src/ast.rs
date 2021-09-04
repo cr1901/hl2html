@@ -4,8 +4,8 @@ use url::Url;
 use uuid::Uuid;
 use version_compare::version::Version;
 
-use std::fmt;
 use std::error;
+use std::fmt;
 
 use crate::lexer::{LexerError, Tok};
 
@@ -80,16 +80,18 @@ pub enum HotlistError<'a> {
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct SpanInfo {
     pub error: Option<(usize, usize)>,
-    pub entry: (usize, usize)
+    pub entry: (usize, usize),
 }
 
 impl<'a> fmt::Display for HotlistError<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            HotlistError::RequiredFieldMissing(fld, _) => write!(f, "required Note/Folder field {} missing", fld),
+            HotlistError::RequiredFieldMissing(fld, _) => {
+                write!(f, "required Note/Folder field {} missing", fld)
+            }
             HotlistError::U32OutOfRange(u) => write!(f, "integer {} does not fit into u32", u),
             HotlistError::InvalidUuid(u) => write!(f, "{} is not a valid UUID", u),
-            HotlistError::InvalidUrl(u)  => write!(f, "{} is not a valid URL", u),
+            HotlistError::InvalidUrl(u) => write!(f, "{} is not a valid URL", u),
         }
     }
 }
