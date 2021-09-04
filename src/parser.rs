@@ -112,7 +112,14 @@ mod tests {
             hotlist::HotlistOptionsParser::new()
                 .parse(inp, lexer)
                 .unwrap_err(),
-            ast::HotlistError::RequiredFieldMissing("encoding", ast::SpanInfo { error: None, entry: (0, 8)}).into()
+            ast::HotlistError::RequiredFieldMissing(
+                "encoding",
+                ast::SpanInfo {
+                    error: None,
+                    entry: (0, 8)
+                }
+            )
+            .into()
         );
     }
 
