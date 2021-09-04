@@ -207,4 +207,83 @@ mod tests {
             ]
         );
     }
+
+    #[test]
+    fn test_folder() {
+        let inp = "#FOLDER\n\
+        \tID=100\n\
+        \tUNIQUEID=11111111111111111111111111111111\n\
+        \tNAME=My Folder\n\
+        \tCREATED=900000000\n\
+        \tEXPANDED=YES\n\
+        \n\
+        #NOTE\n\
+        \tID=200\n\
+        \tUNIQUEID=DEADCAFEDEADBEEFFEEDCAFEBAADF00D\n\
+        \tNAME=Baz.\n\
+        \tURL=https://www.example.net\n\
+        \tCREATED=1000000000\n\
+        \n\
+        #FOLDER\n\
+        \tID=238\n\
+        \tNAME=Trash\n\
+        \tCREATED=1322360302\n\
+        \tTRASH FOLDER=YES\n\
+        \tUNIQUEID=A9AAFED0976111DC85AC8946BEF8D2DC\n\
+        -
+        \n\
+        -\n\
+        #NOTE\n\
+        \tID=400\n\
+        \tUNIQUEID=22222222222222222222222222222222\n\
+        \tNAME=Quux.\n\
+        \tACTIVE=YES\n\
+        \tURL=https://www.example.edu\n\
+        \tCREATED=1100000000\n\
+        \n";
+
+        let lexer = lexer::Lexer::new(inp);
+        assert_eq!(
+            &hotlist::HotlistEntriesParser::new()
+                .parse(inp, lexer)
+                .unwrap(),
+            &[
+                ast::EntryKind::Folder(ast::Folder {
+                    id: 100,
+                    uuid: Uuid::parse_str("11111111111111111111111111111111").unwrap(),
+                    name: "My Folder",
+                    timestamp: Utc.timestamp(900000000, 0),
+                    expanded: true,
+                    trash: false,
+                    entries: vec![
+                        ast::EntryKind::Note(ast::Note {
+                            id: 200,
+                            uuid: Uuid::parse_str("DEADCAFEDEADBEEFFEEDCAFEBAADF00D").unwrap(),
+                            contents: Some("Baz."),
+                            url: Some(Url::parse("https://www.example.net").unwrap()),
+                            timestamp: Utc.timestamp(1000000000, 0),
+                            active: false
+                        }),
+                        ast::EntryKind::Folder(ast::Folder {
+                            id: 238,
+                            uuid: Uuid::parse_str("A9AAFED0976111DC85AC8946BEF8D2DC").unwrap(),
+                            name: "Trash",
+                            timestamp: Utc.timestamp(1322360302, 0),
+                            expanded: false,
+                            trash: true,
+                            entries: vec![]
+                        }),
+                    ]
+                }),
+                ast::EntryKind::Note(ast::Note {
+                    id: 400,
+                    uuid: Uuid::parse_str("22222222222222222222222222222222").unwrap(),
+                    contents: Some("Quux."),
+                    url: Some(Url::parse("https://www.example.edu").unwrap()),
+                    timestamp: Utc.timestamp(1100000000, 0),
+                    active: true
+                }),
+            ]
+        );
+    }
 }
