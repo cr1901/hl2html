@@ -64,6 +64,9 @@ pub fn emit<T: AsRef<Path>>(
                 } else {
                     if f.entries.len() == 0 {
                         write!(out_handle, "{:1$}<h2>Folder {2}</h2>\n", " ", 4, f.name)?;
+                        write!(out_handle, "{:1$}<p>No Entries<p>\n", " ", 4)?;
+                    } else {
+                        write!(out_handle, "{:1$}<p>End Folder {2}</p>\n", " ", 4, f.name)?;
                     }
 
                     last_visited = Some(curr);
@@ -72,6 +75,36 @@ pub fn emit<T: AsRef<Path>>(
             },
             EntryKind::Note(n) => {
                 write!(out_handle, "{:1$}<h2>Note {2}</h2>\n", " ", 4, n.id)?;
+
+                // without "&": cannot move out of `n.url.0` which is behind a shared reference
+                if let Some(u) = &n.url {
+                    write!(out_handle, r#"{:1$}<p>URL: <a href="{2}">{2}</a>
+"#, " ", 4, u)?;
+                } else {
+                    write!(out_handle, "{:1$}<p>URL: None</p>\n", " ", 4)?;
+                }
+
+                if let Some(nbody) = n.contents {
+                    write!(out_handle, "{:1$}<p>", " ", 4)?;
+
+                    let mut possible_newline = false;
+                    for c in nbody.chars() {
+                        if c == '\x02' && !possible_newline {
+                            possible_newline = true;
+                        } else if c == '\x02' && possible_newline {
+                            write!(out_handle, "</p>\n{:1$}<p>", " ", 4)?;
+                            possible_newline = false;
+                        } else if c == '<' {
+                            write!(out_handle, "&lt;")?;
+                        } else if c == '>' {
+                            write!(out_handle, "&gt;")?;
+                        } else {
+                            write!(out_handle, "{}", c)?;
+                        }
+                    }
+                    write!(out_handle, "<p>\n")?;
+                }
+
                 last_visited = Some(curr);
                 stack.pop();
             }
@@ -83,6 +116,8 @@ pub fn emit<T: AsRef<Path>>(
         r#"  </body>
 </html>"#
     )?;
+
+    out_handle.flush()?;
 
     Ok(())
 }
