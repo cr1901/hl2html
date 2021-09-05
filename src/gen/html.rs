@@ -55,15 +55,16 @@ pub fn emit<T: AsRef<Path>>(
 
         match curr {
             EntryKind::Folder(f) => {
-
                 if f.entries.len() != 0 && !nodes_equal(f.entries.last(), last_visited) {
                     write!(out_handle, "{:1$}<h2>Folder {2}</h2>\n", " ", 4, f.name)?;
+                    write!(out_handle, "{:1$}<p>Created: {2}</p>\n", " ", 4, f.timestamp)?;
                     for e in f.entries.iter().rev() {
                         stack.push(e);
                     }
                 } else {
                     if f.entries.len() == 0 {
                         write!(out_handle, "{:1$}<h2>Folder {2}</h2>\n", " ", 4, f.name)?;
+                        write!(out_handle, "{:1$}<p>Created: {2}</p>\n", " ", 4, f.timestamp)?;
                         write!(out_handle, "{:1$}<p>No Entries<p>\n", " ", 4)?;
                     } else {
                         write!(out_handle, "{:1$}<p>End Folder {2}</p>\n", " ", 4, f.name)?;
@@ -83,6 +84,8 @@ pub fn emit<T: AsRef<Path>>(
                 } else {
                     write!(out_handle, "{:1$}<p>URL: None</p>\n", " ", 4)?;
                 }
+
+                write!(out_handle, "{:1$}<p>Created: {2}</p>\n", " ", 4, n.timestamp)?;
 
                 if let Some(nbody) = n.contents {
                     write!(out_handle, "{:1$}<p>", " ", 4)?;
