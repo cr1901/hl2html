@@ -4,7 +4,7 @@ use crate::error::Error;
 use crate::gen::Visitor;
 
 use std::fs::{create_dir_all, File, OpenOptions};
-use std::io::{self, Write};
+use std::io::{self, BufWriter, Write};
 use std::path::{Path, PathBuf};
 
 pub struct MultiEmitter {
@@ -26,13 +26,15 @@ impl MultiEmitter {
         // It is assumed that the entire directory is recreated each time. No effort is made
         // to restart an interrupted file generation. This check is here in case IDs are, in
         // fact, not unique in practice.
-        let mut file = OpenOptions::new()
+        let file = OpenOptions::new()
             .write(true)
             .create_new(true)
             .open(&self.root)?;
 
+        let mut buf = BufWriter::new(file);
+
         write!(
-            file,
+            buf,
             r#"<html>
   <head>
     <meta charset="utf-8">
@@ -44,7 +46,7 @@ impl MultiEmitter {
         )?;
 
         write!(
-            file,
+            buf,
             r#"    <h1>Note {0}</h1>
     <ul>
       <li>UUID: {1}</li>
@@ -55,21 +57,21 @@ impl MultiEmitter {
         // without "&": cannot move out of `n.url.0` which is behind a shared reference
         if let Some(u) = &n.url {
             write!(
-                file,
+                buf,
                 r#"      <li>URL: <a href="{0}">{0}</a></li>
 "#,
                 u
             )?;
         } else {
             write!(
-                file,
+                buf,
                 r#"      <li>URL: None</li>
 "#
             )?;
         }
 
         write!(
-            file,
+            buf,
             r#"      <li>Created: {}</li>
     </ul>
 "#,
@@ -77,18 +79,19 @@ impl MultiEmitter {
         )?;
 
         if let Some(nbody) = n.contents {
-            write!(file, "    <p>")?;
-            file.write_with_escapes(&nbody)?;
-            write!(file, "<p>\n")?;
+            write!(buf, "    <p>")?;
+            buf.write_with_escapes(&nbody)?;
+            write!(buf, "<p>\n")?;
         }
 
         write!(
-            file,
+            buf,
             r#"  </body>
 </html>
 "#
         )?;
 
+        buf.flush()?;
         self.root.pop();
         Ok(())
     }
