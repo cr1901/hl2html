@@ -63,10 +63,14 @@ fn main() {
         OutputFormat::Html => {
             gen::emit_hotlist_as_html((&args.output).as_ref(), &hotlist, args.multiple)
                 .unwrap_or_else(|e| {
-                    println!(
-                        "Error while writing HTML file {}:",
-                        &args.output.unwrap_or("to stdout".to_string())
-                    );
+                    if args.multiple {
+                        println!("Error while writing HTML files:");
+                    } else {
+                        println!(
+                            "Error while writing HTML file {}:",
+                            &args.output.unwrap_or("to stdout".to_string())
+                        );
+                    }
                     error::print_error_and_exit(e, &args.path, 2);
                 });
         }

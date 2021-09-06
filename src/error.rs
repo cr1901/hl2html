@@ -29,10 +29,10 @@ pub fn print_error_and_exit<'a, T: AsRef<Path>>(err: Error<'a>, filename: T, exi
     };
 
     while printing {
+        println!("{}", &curr_err);
         if let Some(new_err) = curr_err.source() {
             curr_err = new_err;
         } else {
-            println!("{}", &curr_err);
             printing = false;
         }
     }
@@ -65,7 +65,7 @@ fn print_additional_parse_error_info<T: AsRef<Path>>(
             let (context_str, (li_start, _)) = get_context(&mut buf_reader, *start, None)?;
 
             println!(
-                "unknown token begins at approximately line {}, offset {}\n{}",
+                "unknown token begins at approximately line {}, offset {}\ntext: {}",
                 li_start.line, li_start.offset, context_str
             );
         }
@@ -87,7 +87,7 @@ fn print_additional_parse_error_info<T: AsRef<Path>>(
                 let context_str = String::from_utf8_lossy(&vec);
 
                 println!(
-                    "error begins on approximately line {}, offset {}\n{}",
+                    "error begins on approximately line {}, offset {}\ntext: {}",
                     li_start.line, li_start.offset, context_str
                 );
             }
@@ -99,7 +99,7 @@ fn print_additional_parse_error_info<T: AsRef<Path>>(
             let (context_str, (li_start, _)) = get_context(&mut buf_reader, *idx, None)?;
 
             println!(
-                "unknown token begins at approximately line {}, offset {}\n{}",
+                "unknown token begins at approximately line {}, offset {}\ntext: {}",
                 li_start.line, li_start.offset, context_str
             );
         }
