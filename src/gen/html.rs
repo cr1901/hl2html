@@ -1,4 +1,5 @@
 use crate::ast::{EntryKind, Hotlist};
+use super::Visitor;
 
 use std::error::Error;
 use std::fs::File;
