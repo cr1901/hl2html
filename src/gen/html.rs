@@ -1,5 +1,5 @@
-use crate::ast::{EntryKind, Hotlist, Folder, Note};
-use super::{Visitor, traverse_hotlist};
+use super::{traverse_hotlist, Visitor};
+use crate::ast::{EntryKind, Folder, Hotlist, Note};
 
 use std::error::Error;
 use std::fs::File;
@@ -27,15 +27,19 @@ pub fn emit<T: AsRef<Path>>(
     Ok(())
 }
 
-struct HtmlEmitter<W> where W: Write {
+struct HtmlEmitter<W>
+where
+    W: Write,
+{
     buf: W,
 }
 
-impl<W> HtmlEmitter<W> where W: Write {
+impl<W> HtmlEmitter<W>
+where
+    W: Write,
+{
     fn new(buf: W) -> Self {
-        Self {
-            buf
-        }
+        Self { buf }
     }
 
     fn write_with_escapes(&mut self, raw: &str) -> io::Result<()> {
@@ -86,31 +90,35 @@ impl<W> HtmlEmitter<W> where W: Write {
     }
 }
 
-impl<W> Visitor for HtmlEmitter<W> where W: Write {
-    fn visit_folder_empty(&mut self, f: &Folder) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+impl<W> Visitor for HtmlEmitter<W>
+where
+    W: Write,
+{
+    fn visit_folder_empty(
+        &mut self,
+        f: &Folder,
+    ) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         write!(self.buf, "{:1$}<h2>Folder {2}</h2>\n", " ", 4, f.name)?;
-        write!(
-            self.buf,
-            "{:1$}<p>Created: {2}</p>\n",
-            " ", 4, f.timestamp
-        )?;
+        write!(self.buf, "{:1$}<p>Created: {2}</p>\n", " ", 4, f.timestamp)?;
         write!(self.buf, "{:1$}<p>No Entries<p>\n", " ", 4)?;
 
         Ok(())
     }
 
-    fn visit_folder_pre(&mut self, f: &Folder) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+    fn visit_folder_pre(
+        &mut self,
+        f: &Folder,
+    ) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         write!(self.buf, "{:1$}<h2>Folder {2}</h2>\n", " ", 4, f.name)?;
-        write!(
-            self.buf,
-            "{:1$}<p>Created: {2}</p>\n",
-            " ", 4, f.timestamp
-        )?;
+        write!(self.buf, "{:1$}<p>Created: {2}</p>\n", " ", 4, f.timestamp)?;
 
         Ok(())
     }
 
-    fn visit_folder_post(&mut self, f: &Folder) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+    fn visit_folder_post(
+        &mut self,
+        f: &Folder,
+    ) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         write!(self.buf, "{:1$}<p>End Folder {2}</p>\n", " ", 4, f.name)?;
         Ok(())
     }
@@ -120,20 +128,12 @@ impl<W> Visitor for HtmlEmitter<W> where W: Write {
 
         // without "&": cannot move out of `n.url.0` which is behind a shared reference
         if let Some(u) = &n.url {
-            write!(
-                self.buf,
-                "{:1$}<p>URL: <a href=\"{2}\">{2}</a>",
-                " ", 4, u
-            )?;
+            write!(self.buf, "{:1$}<p>URL: <a href=\"{2}\">{2}</a>", " ", 4, u)?;
         } else {
             write!(self.buf, "{:1$}<p>URL: None</p>\n", " ", 4)?;
         }
 
-        write!(
-            self.buf,
-            "{:1$}<p>Created: {2}</p>\n",
-            " ", 4, n.timestamp
-        )?;
+        write!(self.buf, "{:1$}<p>Created: {2}</p>\n", " ", 4, n.timestamp)?;
 
         if let Some(nbody) = n.contents {
             write!(self.buf, "{:1$}<p>", " ", 4)?;
@@ -144,7 +144,10 @@ impl<W> Visitor for HtmlEmitter<W> where W: Write {
         Ok(())
     }
 
-    fn visit_root_pre(&mut self, hl: &Hotlist) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+    fn visit_root_pre(
+        &mut self,
+        hl: &Hotlist,
+    ) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         write!(
             self.buf,
             r#"<html>
@@ -165,7 +168,10 @@ impl<W> Visitor for HtmlEmitter<W> where W: Write {
         Ok(())
     }
 
-    fn visit_root_post(&mut self, _hl: &Hotlist) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+    fn visit_root_post(
+        &mut self,
+        _hl: &Hotlist,
+    ) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         write!(
             self.buf,
             r#"  </body>
@@ -174,5 +180,4 @@ impl<W> Visitor for HtmlEmitter<W> where W: Write {
 
         Ok(())
     }
-
 }

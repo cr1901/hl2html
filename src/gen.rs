@@ -4,20 +4,38 @@ mod html;
 pub use html::emit as emit_hotlist_as_html;
 
 // Imports
-use crate::ast::{EntryKind, Hotlist, Folder, Note};
+use crate::ast::{EntryKind, Folder, Hotlist, Note};
 
 use std::error::Error;
 
 trait Visitor {
-    fn visit_folder_empty(&mut self, folder: &Folder) -> Result<(), Box<dyn Error + Send + Sync + 'static>>;
-    fn visit_folder_pre(&mut self, folder: &Folder) -> Result<(), Box<dyn Error + Send + Sync + 'static>>;
-    fn visit_folder_post(&mut self, folder: &Folder) -> Result<(), Box<dyn Error + Send + Sync + 'static>>;
+    fn visit_folder_empty(
+        &mut self,
+        folder: &Folder,
+    ) -> Result<(), Box<dyn Error + Send + Sync + 'static>>;
+    fn visit_folder_pre(
+        &mut self,
+        folder: &Folder,
+    ) -> Result<(), Box<dyn Error + Send + Sync + 'static>>;
+    fn visit_folder_post(
+        &mut self,
+        folder: &Folder,
+    ) -> Result<(), Box<dyn Error + Send + Sync + 'static>>;
     fn visit_note(&mut self, note: &Note) -> Result<(), Box<dyn Error + Send + Sync + 'static>>;
-    fn visit_root_pre(&mut self, hotlist: &Hotlist) -> Result<(), Box<dyn Error + Send + Sync + 'static>>;
-    fn visit_root_post(&mut self, hotlist: &Hotlist) -> Result<(), Box<dyn Error + Send + Sync + 'static>>;
+    fn visit_root_pre(
+        &mut self,
+        hotlist: &Hotlist,
+    ) -> Result<(), Box<dyn Error + Send + Sync + 'static>>;
+    fn visit_root_post(
+        &mut self,
+        hotlist: &Hotlist,
+    ) -> Result<(), Box<dyn Error + Send + Sync + 'static>>;
 }
 
-fn traverse_hotlist<V: Visitor>(hl: &Hotlist, visitor: &mut V) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+fn traverse_hotlist<V: Visitor>(
+    hl: &Hotlist,
+    visitor: &mut V,
+) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     visitor.visit_root_pre(&hl)?;
 
     let mut stack = Vec::<&EntryKind>::new();
