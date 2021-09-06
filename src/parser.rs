@@ -64,7 +64,7 @@ mod tests {
     use crate::lexer;
 
     use chrono::{TimeZone, Utc};
-    use lalrpop_util::ParseError;
+    
     use url::Url;
     use uuid::Uuid;
     use version_compare::version::Version as RefVersion;

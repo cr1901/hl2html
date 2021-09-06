@@ -2,7 +2,7 @@ use crate::ast::{HotlistError, SpanInfo};
 use crate::lexer::{self, LexerError};
 use crate::parser::*;
 
-use argh::FromArgs;
+
 use lalrpop_util::ParseError;
 use std::error;
 use std::fs::File;
@@ -74,7 +74,7 @@ fn print_additional_parse_error_info<T: AsRef<Path>>(
         } => match hl_err {
             HotlistError::RequiredFieldMissing(_, SpanInfo { error: _, entry }) => {
                 let li_start = get_line_and_offset(&mut buf_reader, entry.0)?;
-                let li_end = get_line_and_offset(&mut buf_reader, entry.1)?;
+                let _li_end = get_line_and_offset(&mut buf_reader, entry.1)?;
 
                 buf_reader.seek(SeekFrom::Start(entry.0 as u64))?;
 

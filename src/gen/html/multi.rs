@@ -4,8 +4,8 @@ use crate::error::Error;
 use crate::gen::Visitor;
 
 use std::fs::{create_dir_all, File, OpenOptions};
-use std::io::{self, BufWriter, Write};
-use std::path::{Path, PathBuf};
+use std::io::{BufWriter, Write};
+use std::path::{PathBuf};
 
 pub struct MultiEmitter {
     root: PathBuf,
@@ -165,7 +165,7 @@ impl Visitor for MultiEmitter {
         self.write_note(n)?;
         Ok(())
     }
-    fn visit_root_pre(&mut self, hotlist: &Hotlist) -> Result<(), Error<'static>> {
+    fn visit_root_pre(&mut self, _hotlist: &Hotlist) -> Result<(), Error<'static>> {
         create_dir_all(&self.root)?;
         Ok(())
     }

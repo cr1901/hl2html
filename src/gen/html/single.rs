@@ -3,7 +3,7 @@ use crate::ast::{Folder, Hotlist, Note};
 use crate::error::Error;
 use crate::gen::Visitor;
 
-use std::io::{self, Write};
+use std::io::{Write};
 
 pub struct SingleEmitter<W>
 where
