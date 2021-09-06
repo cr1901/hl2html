@@ -4,13 +4,15 @@ use crate::parser::*;
 
 use argh::FromArgs;
 use lalrpop_util::ParseError;
-use std::error::Error;
+use std::error;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read, Seek, SeekFrom};
 use std::path::Path;
 
+pub type Error<'a> = Box<dyn error::Error + Send + Sync + 'a>;
+
 pub fn print_error_and_exit<'a, T: AsRef<Path>>(
-    err: Box<dyn Error + Send + Sync + 'a>,
+    err: Error<'a>,
     filename: T,
     exit_code: i32,
 ) -> ! {
@@ -23,8 +25,8 @@ pub fn print_error_and_exit<'a, T: AsRef<Path>>(
     //   be valid.
     // * No references escape this function- so we can't type pun non-static lifetimes as
     //   static lifetimes.
-    let mut curr_err: &(dyn Error + 'static) = &*unsafe {
-        std::mem::transmute::<&(dyn Error + Send + Sync + 'a), &(dyn Error + Send + Sync + 'static)>(
+    let mut curr_err: &(dyn error::Error + 'static) = &*unsafe {
+        std::mem::transmute::<&(dyn error::Error + Send + Sync + 'a), &(dyn error::Error + Send + Sync + 'static)>(
             &*err,
         )
     };
@@ -54,7 +56,7 @@ pub fn print_error_and_exit<'a, T: AsRef<Path>>(
 fn print_additional_parse_error_info<T: AsRef<Path>>(
     filename: T,
     p_err: &ParseError<usize, lexer::Tok<'static>, LexerError<'static>>,
-) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+) -> Result<(), Error<'static>> {
     let file = File::open(filename.as_ref())?;
     let mut buf_reader = BufReader::new(file);
 
@@ -114,7 +116,7 @@ fn get_context<R: Read + Seek>(
     buf_reader: &mut BufReader<R>,
     start: usize,
     _end: Option<i64>,
-) -> Result<(String, (LineInfo, Option<LineInfo>)), Box<dyn Error + Send + Sync + 'static>> {
+) -> Result<(String, (LineInfo, Option<LineInfo>)), Error<'static>> {
     let li_start = get_line_and_offset(buf_reader, start)?;
     buf_reader.seek(SeekFrom::Start(start as u64))?;
 

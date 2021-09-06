@@ -1,7 +1,7 @@
 use super::{traverse_hotlist, Visitor};
 use crate::ast::{EntryKind, Folder, Hotlist, Note};
+use crate::error::Error;
 
-use std::error::Error;
 use std::fs::File;
 use std::io::{self, BufWriter, Write};
 use std::path::Path;
@@ -10,7 +10,7 @@ pub fn emit<T: AsRef<Path>>(
     filename: Option<T>,
     hl: &Hotlist,
     multi: bool,
-) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+) -> Result<(), Error<'static>> {
     let out_handle: Box<dyn Write> = if let Some(fn_) = filename {
         let file = File::create(fn_.as_ref())?;
         Box::new(BufWriter::new(file))
@@ -97,7 +97,7 @@ where
     fn visit_folder_empty(
         &mut self,
         f: &Folder,
-    ) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+    ) -> Result<(), Error<'static>> {
         write!(self.buf, "{:1$}<h2>Folder {2}</h2>\n", " ", 4, f.name)?;
         write!(self.buf, "{:1$}<p>Created: {2}</p>\n", " ", 4, f.timestamp)?;
         write!(self.buf, "{:1$}<p>No Entries<p>\n", " ", 4)?;
@@ -108,7 +108,7 @@ where
     fn visit_folder_pre(
         &mut self,
         f: &Folder,
-    ) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+    ) -> Result<(), Error<'static>> {
         write!(self.buf, "{:1$}<h2>Folder {2}</h2>\n", " ", 4, f.name)?;
         write!(self.buf, "{:1$}<p>Created: {2}</p>\n", " ", 4, f.timestamp)?;
 
@@ -118,12 +118,12 @@ where
     fn visit_folder_post(
         &mut self,
         f: &Folder,
-    ) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+    ) -> Result<(), Error<'static>> {
         write!(self.buf, "{:1$}<p>End Folder {2}</p>\n", " ", 4, f.name)?;
         Ok(())
     }
 
-    fn visit_note(&mut self, n: &Note) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+    fn visit_note(&mut self, n: &Note) -> Result<(), Error<'static>> {
         write!(self.buf, "{:1$}<h2>Note {2}</h2>\n", " ", 4, n.id)?;
 
         // without "&": cannot move out of `n.url.0` which is behind a shared reference
@@ -147,7 +147,7 @@ where
     fn visit_root_pre(
         &mut self,
         hl: &Hotlist,
-    ) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+    ) -> Result<(), Error<'static>> {
         write!(
             self.buf,
             r#"<html>
@@ -171,7 +171,7 @@ where
     fn visit_root_post(
         &mut self,
         _hl: &Hotlist,
-    ) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+    ) -> Result<(), Error<'static>> {
         write!(
             self.buf,
             r#"  </body>

@@ -1,7 +1,7 @@
 use crate::ast;
+use crate::error::Error;
 use crate::lexer;
 
-use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
@@ -18,7 +18,7 @@ pub struct LineInfo {
 pub fn parse_hotlist_from_file<'a, T: AsRef<Path>>(
     filename: T,
     in_buf: &'a mut String,
-) -> Result<ast::Hotlist<'a>, Box<dyn Error + Send + Sync + 'a>> {
+) -> Result<ast::Hotlist<'a>, Error<'a>> {
     let file = File::open(filename)?;
     let mut buf_reader = BufReader::new(file);
 
@@ -32,10 +32,10 @@ pub fn parse_hotlist_from_file<'a, T: AsRef<Path>>(
     Ok(hotlist)
 }
 
-pub fn get_line_and_offset<T: Read>(
+pub fn get_line_and_offset<'a, T: Read>(
     filebuf: &mut T,
     file_offset: usize,
-) -> Result<LineInfo, Box<dyn Error + Send + Sync + 'static>> {
+) -> Result<LineInfo, Error<'a>> {
     let mut num_lines = 1;
     let mut offset_cur_line = 0;
 
