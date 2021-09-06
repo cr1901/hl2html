@@ -2,7 +2,6 @@ use crate::ast::{HotlistError, SpanInfo};
 use crate::lexer::{self, LexerError};
 use crate::parser::*;
 
-
 use lalrpop_util::ParseError;
 use std::error;
 use std::fs::File;

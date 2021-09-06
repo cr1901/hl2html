@@ -5,7 +5,7 @@ use crate::gen::Visitor;
 
 use std::fs::{create_dir_all, File, OpenOptions};
 use std::io::{BufWriter, Write};
-use std::path::{PathBuf};
+use std::path::PathBuf;
 
 pub struct MultiEmitter {
     root: PathBuf,
