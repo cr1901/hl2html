@@ -1,7 +1,9 @@
+mod multi;
 mod single;
 
 use crate::ast::Hotlist;
 use crate::error::Error;
+use multi::MultiEmitter;
 use single::SingleEmitter;
 use super::traverse_hotlist;
 
@@ -14,16 +16,22 @@ pub fn emit<T: AsRef<Path>>(
     hl: &Hotlist,
     multi: bool,
 ) -> Result<(), Error<'static>> {
-    let out_handle: Box<dyn Write> = if let Some(fn_) = filename {
-        let file = File::create(fn_.as_ref())?;
-        Box::new(BufWriter::new(file))
-    } else {
-        Box::new(BufWriter::new(io::stdout()))
-    };
-
     if multi {
-        return Err("multiple-file HTML rendering not implemented yet".into());
+        if let Some(fn_) = filename {
+            let mut emitter = MultiEmitter::new(fn_.as_ref());
+            traverse_hotlist(hl, &mut emitter)?;
+        } else {
+            // TODO: EmitError
+            return Err("filename must be provided in multiple-file mode".into());
+        }
     } else {
+        let out_handle: Box<dyn Write> = if let Some(fn_) = filename {
+            let file = File::create(fn_.as_ref())?;
+            Box::new(BufWriter::new(file))
+        } else {
+            Box::new(BufWriter::new(io::stdout()))
+        };
+
         let mut emitter = SingleEmitter::new(out_handle);
         traverse_hotlist(hl, &mut emitter)?;
         let mut out_handle = emitter.into_inner();
