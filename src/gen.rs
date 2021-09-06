@@ -8,33 +8,15 @@ use crate::ast::{EntryKind, Folder, Hotlist, Note};
 use crate::error::Error;
 
 trait Visitor {
-    fn visit_folder_empty(
-        &mut self,
-        folder: &Folder,
-    ) -> Result<(), Error<'static>>;
-    fn visit_folder_pre(
-        &mut self,
-        folder: &Folder,
-    ) -> Result<(), Error<'static>>;
-    fn visit_folder_post(
-        &mut self,
-        folder: &Folder,
-    ) -> Result<(), Error<'static>>;
+    fn visit_folder_empty(&mut self, folder: &Folder) -> Result<(), Error<'static>>;
+    fn visit_folder_pre(&mut self, folder: &Folder) -> Result<(), Error<'static>>;
+    fn visit_folder_post(&mut self, folder: &Folder) -> Result<(), Error<'static>>;
     fn visit_note(&mut self, note: &Note) -> Result<(), Error<'static>>;
-    fn visit_root_pre(
-        &mut self,
-        hotlist: &Hotlist,
-    ) -> Result<(), Error<'static>>;
-    fn visit_root_post(
-        &mut self,
-        hotlist: &Hotlist,
-    ) -> Result<(), Error<'static>>;
+    fn visit_root_pre(&mut self, hotlist: &Hotlist) -> Result<(), Error<'static>>;
+    fn visit_root_post(&mut self, hotlist: &Hotlist) -> Result<(), Error<'static>>;
 }
 
-fn traverse_hotlist<V: Visitor>(
-    hl: &Hotlist,
-    visitor: &mut V,
-) -> Result<(), Error<'static>> {
+fn traverse_hotlist<V: Visitor>(hl: &Hotlist, visitor: &mut V) -> Result<(), Error<'static>> {
     visitor.visit_root_pre(&hl)?;
 
     let mut stack = Vec::<&EntryKind>::new();

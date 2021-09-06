@@ -1,11 +1,11 @@
 mod multi;
 mod single;
 
+use super::traverse_hotlist;
 use crate::ast::Hotlist;
 use crate::error::Error;
 use multi::MultiEmitter;
 use single::SingleEmitter;
-use super::traverse_hotlist;
 
 use std::fs::File;
 use std::io::{self, BufWriter, Write};
@@ -86,4 +86,4 @@ trait HtmlEscapeWrite: Write {
     }
 }
 
-impl<W> HtmlEscapeWrite for W where W: Write { }
+impl<W> HtmlEscapeWrite for W where W: Write {}

@@ -13,7 +13,12 @@ struct HotlistArgs {
     #[argh(switch, short = 'm')]
     multiple: bool,
     /// emit hotlist in the selected mode (default HTML)
-    #[argh(option, short = 'f', default="default_format()", from_str_fn(output_format))]
+    #[argh(
+        option,
+        short = 'f',
+        default = "default_format()",
+        from_str_fn(output_format)
+    )]
     format: OutputFormat,
     /// output file or directory (if multiple files)
     #[argh(option, short = 'o')]

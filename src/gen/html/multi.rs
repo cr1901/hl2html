@@ -19,8 +19,7 @@ impl MultiEmitter {
         Self { root: root.into() }
     }
 
-    fn write_note(&mut self, n: &Note) -> Result<(), Error<'static>>
-    {
+    fn write_note(&mut self, n: &Note) -> Result<(), Error<'static>> {
         self.root.push(n.id.to_string());
         self.root.set_extension("html");
 

@@ -11,11 +11,7 @@ use std::path::Path;
 
 pub type Error<'a> = Box<dyn error::Error + Send + Sync + 'a>;
 
-pub fn print_error_and_exit<'a, T: AsRef<Path>>(
-    err: Error<'a>,
-    filename: T,
-    exit_code: i32,
-) -> ! {
+pub fn print_error_and_exit<'a, T: AsRef<Path>>(err: Error<'a>, filename: T, exit_code: i32) -> ! {
     let mut printing = true;
     // Safety:
     // * Only place we want to downcast in the codebase.
@@ -26,9 +22,10 @@ pub fn print_error_and_exit<'a, T: AsRef<Path>>(
     // * No references escape this function- so we can't type pun non-static lifetimes as
     //   static lifetimes.
     let mut curr_err: &(dyn error::Error + 'static) = &*unsafe {
-        std::mem::transmute::<&(dyn error::Error + Send + Sync + 'a), &(dyn error::Error + Send + Sync + 'static)>(
-            &*err,
-        )
+        std::mem::transmute::<
+            &(dyn error::Error + Send + Sync + 'a),
+            &(dyn error::Error + Send + Sync + 'static),
+        >(&*err)
     };
 
     while printing {
