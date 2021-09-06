@@ -1,4 +1,4 @@
-use crate::ast::{Hotlist, EntryKind};
+use crate::ast::{EntryKind, Hotlist};
 
 use std::error::Error;
 use std::fs::File;
@@ -11,7 +11,7 @@ pub fn emit<T: AsRef<Path>>(
     multi: bool,
 ) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     let mut out_handle: Box<dyn Write> = if let Some(fn_) = filename {
-        let file = File::open(fn_.as_ref())?;
+        let file = File::create(fn_.as_ref())?;
         Box::new(BufWriter::new(file))
     } else {
         Box::new(BufWriter::new(io::stdout()))
@@ -30,11 +30,8 @@ pub fn emit<T: AsRef<Path>>(
 
     write!(
         out_handle,
-        r#"<h1>{:1$}Opera Hotlist Version {2}</h1>
-"#,
-        " ",
-        4,
-        hl.version
+        "<h1>{:1$}Opera Hotlist Version {2}</h1>\n",
+        " ", 4, hl.version
     )?;
 
     let mut stack = Vec::<&EntryKind>::new();
@@ -57,14 +54,22 @@ pub fn emit<T: AsRef<Path>>(
             EntryKind::Folder(f) => {
                 if f.entries.len() != 0 && !nodes_equal(f.entries.last(), last_visited) {
                     write!(out_handle, "{:1$}<h2>Folder {2}</h2>\n", " ", 4, f.name)?;
-                    write!(out_handle, "{:1$}<p>Created: {2}</p>\n", " ", 4, f.timestamp)?;
+                    write!(
+                        out_handle,
+                        "{:1$}<p>Created: {2}</p>\n",
+                        " ", 4, f.timestamp
+                    )?;
                     for e in f.entries.iter().rev() {
                         stack.push(e);
                     }
                 } else {
                     if f.entries.len() == 0 {
                         write!(out_handle, "{:1$}<h2>Folder {2}</h2>\n", " ", 4, f.name)?;
-                        write!(out_handle, "{:1$}<p>Created: {2}</p>\n", " ", 4, f.timestamp)?;
+                        write!(
+                            out_handle,
+                            "{:1$}<p>Created: {2}</p>\n",
+                            " ", 4, f.timestamp
+                        )?;
                         write!(out_handle, "{:1$}<p>No Entries<p>\n", " ", 4)?;
                     } else {
                         write!(out_handle, "{:1$}<p>End Folder {2}</p>\n", " ", 4, f.name)?;
@@ -73,38 +78,30 @@ pub fn emit<T: AsRef<Path>>(
                     last_visited = Some(curr);
                     stack.pop();
                 }
-            },
+            }
             EntryKind::Note(n) => {
                 write!(out_handle, "{:1$}<h2>Note {2}</h2>\n", " ", 4, n.id)?;
 
                 // without "&": cannot move out of `n.url.0` which is behind a shared reference
                 if let Some(u) = &n.url {
-                    write!(out_handle, r#"{:1$}<p>URL: <a href="{2}">{2}</a>
-"#, " ", 4, u)?;
+                    write!(
+                        out_handle,
+                        "{:1$}<p>URL: <a href=\"{2}\">{2}</a>",
+                        " ", 4, u
+                    )?;
                 } else {
                     write!(out_handle, "{:1$}<p>URL: None</p>\n", " ", 4)?;
                 }
 
-                write!(out_handle, "{:1$}<p>Created: {2}</p>\n", " ", 4, n.timestamp)?;
+                write!(
+                    out_handle,
+                    "{:1$}<p>Created: {2}</p>\n",
+                    " ", 4, n.timestamp
+                )?;
 
                 if let Some(nbody) = n.contents {
                     write!(out_handle, "{:1$}<p>", " ", 4)?;
-
-                    let mut possible_newline = false;
-                    for c in nbody.chars() {
-                        if c == '\x02' && !possible_newline {
-                            possible_newline = true;
-                        } else if c == '\x02' && possible_newline {
-                            write!(out_handle, "</p>\n{:1$}<p>", " ", 4)?;
-                            possible_newline = false;
-                        } else if c == '<' {
-                            write!(out_handle, "&lt;")?;
-                        } else if c == '>' {
-                            write!(out_handle, "&gt;")?;
-                        } else {
-                            write!(out_handle, "{}", c)?;
-                        }
-                    }
+                    write_with_escapes(&mut out_handle, &nbody)?;
                     write!(out_handle, "<p>\n")?;
                 }
 
@@ -125,13 +122,56 @@ pub fn emit<T: AsRef<Path>>(
     Ok(())
 }
 
-fn nodes_equal<'a>(a: Option<&EntryKind<'a>>, b: Option<&EntryKind<'a>>) -> bool {
-     if a.is_none() || b.is_none() {
-         return false;
-     } else {
-         let a_ref = a.unwrap();
-         let b_ref = b.unwrap();
+fn write_with_escapes<T: Write>(buf: &mut T, raw: &str) -> io::Result<()> {
+    let mut possible_newline = false;
+    for c in raw.chars() {
+        match c {
+            '\x02' if !possible_newline => {
+                possible_newline = true;
+            }
+            '\x02' if possible_newline => {
+                write!(buf, "</p>\n{:1$}<p>", " ", 4)?;
+                possible_newline = false;
+            }
+            '<' => {
+                write!(buf, "&lt;")?;
+            }
+            '>' => {
+                write!(buf, "&gt;")?;
+            }
+            '"' => {
+                write!(buf, "&quot;")?;
+            }
+            '&' => {
+                write!(buf, "&amp;")?;
+            }
+            '\'' => {
+                write!(buf, "&apos;")?;
+            }
+            _ => {
+                write!(buf, "{}", c)?;
+            }
+        }
 
-         return std::ptr::eq(a_ref, b_ref);
-     }
- }
+        // We're only interested in matching two \x02 chars back-to-back.
+        match c {
+            '\x02' => {}
+            _ => {
+                possible_newline = false;
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn nodes_equal<'a>(a: Option<&EntryKind<'a>>, b: Option<&EntryKind<'a>>) -> bool {
+    if a.is_none() || b.is_none() {
+        return false;
+    } else {
+        let a_ref = a.unwrap();
+        let b_ref = b.unwrap();
+
+        return std::ptr::eq(a_ref, b_ref);
+    }
+}
