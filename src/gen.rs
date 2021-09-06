@@ -17,7 +17,7 @@ trait Visitor {
     fn visit_root_post(&mut self, hotlist: &Hotlist) -> Result<(), Box<dyn Error + Send + Sync + 'static>>;
 }
 
-fn traverse_hotlist<V: Visitor>(hl: &Hotlist, mut visitor: V) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+fn traverse_hotlist<V: Visitor>(hl: &Hotlist, visitor: &mut V) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     visitor.visit_root_pre(&hl)?;
 
     let mut stack = Vec::<&EntryKind>::new();
