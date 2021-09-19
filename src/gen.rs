@@ -9,16 +9,16 @@ pub use tiddler_json::emit as emit_hotlist_as_tiddler_json;
 use crate::ast::{EntryKind, Folder, Hotlist, Note};
 use crate::error::Error;
 
-trait Visitor {
-    fn visit_folder_empty(&mut self, folder: &Folder) -> Result<(), Error<'static>>;
-    fn visit_folder_pre(&mut self, folder: &Folder) -> Result<(), Error<'static>>;
-    fn visit_folder_post(&mut self, folder: &Folder) -> Result<(), Error<'static>>;
-    fn visit_note(&mut self, note: &Note) -> Result<(), Error<'static>>;
-    fn visit_root_pre(&mut self, hotlist: &Hotlist) -> Result<(), Error<'static>>;
-    fn visit_root_post(&mut self, hotlist: &Hotlist) -> Result<(), Error<'static>>;
+trait Visitor<'a, 'input: 'a> {
+    fn visit_folder_empty(&mut self, folder: &'a Folder<'input>) -> Result<(), Error<'static>>;
+    fn visit_folder_pre(&mut self, folder: &'a Folder<'input>) -> Result<(), Error<'static>>;
+    fn visit_folder_post(&mut self, folder: &'a Folder<'input>) -> Result<(), Error<'static>>;
+    fn visit_note(&mut self, note: &'a Note<'input>) -> Result<(), Error<'static>>;
+    fn visit_root_pre(&mut self, hotlist: &'a Hotlist<'input>) -> Result<(), Error<'static>>;
+    fn visit_root_post(&mut self, hotlist: &'a Hotlist<'input>) -> Result<(), Error<'static>>;
 }
 
-fn traverse_hotlist<V: Visitor>(hl: &Hotlist, visitor: &mut V) -> Result<(), Error<'static>> {
+fn traverse_hotlist<'a, 'input: 'a, V: Visitor<'a, 'input>>(hl: &'a Hotlist<'input>, visitor: &mut V) -> Result<(), Error<'static>> {
     visitor.visit_root_pre(&hl)?;
 
     let mut stack = Vec::<&EntryKind>::new();
@@ -69,7 +69,7 @@ fn traverse_hotlist<V: Visitor>(hl: &Hotlist, visitor: &mut V) -> Result<(), Err
     Ok(())
 }
 
-fn nodes_equal<'a>(a: Option<&EntryKind<'a>>, b: Option<&EntryKind<'a>>) -> bool {
+fn nodes_equal<'input>(a: Option<&EntryKind<'input>>, b: Option<&EntryKind<'input>>) -> bool {
     if a.is_none() || b.is_none() {
         return false;
     } else {

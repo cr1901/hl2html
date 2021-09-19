@@ -25,11 +25,11 @@ where
     }
 }
 
-impl<W> Visitor for SingleEmitter<W>
+impl<'a, 'input: 'a, W> Visitor<'a, 'input> for SingleEmitter<W>
 where
     W: Write,
 {
-    fn visit_folder_empty(&mut self, f: &Folder) -> Result<(), Error<'static>> {
+    fn visit_folder_empty(&mut self, f: &'a Folder<'input>) -> Result<(), Error<'static>> {
         write!(self.buf, "{:1$}<h2>Folder {2}</h2>\n", " ", 4, f.name)?;
         write!(self.buf, "{:1$}<ul>\n", " ", 4)?;
         write!(self.buf, "{:1$}<li>ID: {2}</li>\n", " ", 6, f.id)?;
@@ -47,7 +47,7 @@ where
         Ok(())
     }
 
-    fn visit_folder_pre(&mut self, f: &Folder) -> Result<(), Error<'static>> {
+    fn visit_folder_pre(&mut self, f: &'a Folder<'input>) -> Result<(), Error<'static>> {
         write!(self.buf, "{:1$}<h2>Folder {2}</h2>\n", " ", 4, f.name)?;
         write!(self.buf, "{:1$}<ul>\n", " ", 4)?;
         write!(self.buf, "{:1$}<li>ID: {2}</li>\n", " ", 6, f.id)?;
@@ -63,13 +63,13 @@ where
         Ok(())
     }
 
-    fn visit_folder_post(&mut self, f: &Folder) -> Result<(), Error<'static>> {
+    fn visit_folder_post(&mut self, f: &'a Folder<'input>) -> Result<(), Error<'static>> {
         write!(self.buf, "{:1$}<p>End Folder {2}</p>\n", " ", 4, f.name)?;
         write!(self.buf, "\n")?;
         Ok(())
     }
 
-    fn visit_note(&mut self, n: &Note) -> Result<(), Error<'static>> {
+    fn visit_note(&mut self, n: &'a Note<'input>) -> Result<(), Error<'static>> {
         write!(self.buf, "{:1$}<h2>Note {2}</h2>\n", " ", 4, n.id)?;
         write!(self.buf, "{:1$}<ul>\n", " ", 4)?;
         write!(self.buf, "{:1$}<li>UUID: {2}</li>\n", " ", 6, n.uuid)?;
@@ -102,7 +102,7 @@ where
         Ok(())
     }
 
-    fn visit_root_pre(&mut self, hl: &Hotlist) -> Result<(), Error<'static>> {
+    fn visit_root_pre(&mut self, hl: &'a Hotlist<'input>) -> Result<(), Error<'static>> {
         write!(
             self.buf,
             r#"<html>
@@ -123,7 +123,7 @@ where
         Ok(())
     }
 
-    fn visit_root_post(&mut self, _hl: &Hotlist) -> Result<(), Error<'static>> {
+    fn visit_root_post(&mut self, _hl: &'a Hotlist<'input>) -> Result<(), Error<'static>> {
         write!(
             self.buf,
             r#"  </body>

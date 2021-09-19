@@ -140,8 +140,8 @@ Number of Entries: {}
     }
 }
 
-impl Visitor for MultiEmitter {
-    fn visit_folder_empty(&mut self, f: &Folder) -> Result<(), Error<'static>> {
+impl<'a, 'input: 'a>  Visitor<'a, 'input>  for MultiEmitter {
+    fn visit_folder_empty(&mut self, f: &'a Folder<'input>) -> Result<(), Error<'static>> {
         self.root.push(f.name);
         create_dir_all(&self.root)?;
 
@@ -150,26 +150,26 @@ impl Visitor for MultiEmitter {
         self.root.pop();
         Ok(())
     }
-    fn visit_folder_pre(&mut self, f: &Folder) -> Result<(), Error<'static>> {
+    fn visit_folder_pre(&mut self, f: &'a Folder<'input>) -> Result<(), Error<'static>> {
         self.root.push(f.name);
         create_dir_all(&self.root)?;
         Ok(())
     }
-    fn visit_folder_post(&mut self, f: &Folder) -> Result<(), Error<'static>> {
+    fn visit_folder_post(&mut self, f: &'a Folder<'input>) -> Result<(), Error<'static>> {
         self.write_folder_meta(f)?;
 
         self.root.pop();
         Ok(())
     }
-    fn visit_note(&mut self, n: &Note) -> Result<(), Error<'static>> {
+    fn visit_note(&mut self, n: &'a Note<'input>) -> Result<(), Error<'static>> {
         self.write_note(n)?;
         Ok(())
     }
-    fn visit_root_pre(&mut self, _hotlist: &Hotlist) -> Result<(), Error<'static>> {
+    fn visit_root_pre(&mut self, _hotlist: &'a Hotlist<'input>) -> Result<(), Error<'static>> {
         create_dir_all(&self.root)?;
         Ok(())
     }
-    fn visit_root_post(&mut self, h: &Hotlist) -> Result<(), Error<'static>> {
+    fn visit_root_post(&mut self, h: &'a Hotlist<'input>) -> Result<(), Error<'static>> {
         self.write_root_meta(h)?;
         Ok(())
     }
