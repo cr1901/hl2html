@@ -3,11 +3,14 @@ mod single;
 use super::traverse_hotlist;
 use crate::ast::Hotlist;
 use crate::error::Error;
-use single::SingleEmitter;
+use single::SingleGenerator;
 
 use std::fs::File;
 use std::io::{self, BufWriter, Write};
 use std::path::Path;
+
+use serde::Serialize;
+use serde_json::to_writer_pretty;
 
 pub fn emit<T: AsRef<Path>>(
     filename: Option<T>,
@@ -25,10 +28,9 @@ pub fn emit<T: AsRef<Path>>(
             Box::new(BufWriter::new(io::stdout()))
         };
 
-        let mut emitter = SingleEmitter::new(out_handle);
-        traverse_hotlist(hl, &mut emitter)?;
-        let mut out_handle = emitter.into_inner();
-        out_handle.flush()?;
+        let mut gen = SingleGenerator::new();
+        traverse_hotlist(hl, &mut gen)?;
+        let mut emitter = to_writer_pretty(out_handle, &gen.into_inner())?;
     }
 
     Ok(())

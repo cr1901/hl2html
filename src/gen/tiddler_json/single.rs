@@ -2,34 +2,29 @@ use crate::ast::{Folder, Hotlist, Note};
 use crate::error::Error;
 use crate::gen::Visitor;
 
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::io::Write;
 
-pub struct SingleEmitter<'input, W>
-where
-    W: Write,
+
+pub struct SingleGenerator<'a>
 {
-    buf: W,
-    json: Vec<HashMap<&'static str, &'input str>>
+    json: Vec<HashMap<&'static str, Cow<'a, str>>>,
 }
 
-impl<'input, W> SingleEmitter<'input, W>
-where
-    W: Write,
+impl<'a> SingleGenerator<'a>
 {
-    pub fn new(buf: W) -> Self {
-        let json = Vec::<HashMap::<&'static str, &'input str>>::new();
-        Self { buf, json }
+    pub fn new() -> Self {
+        let json = Vec::<HashMap::<&'static str, Cow<'a, str>>>::new();
+        Self { json }
     }
 
-    pub fn into_inner(self) -> W {
-        self.buf
+    pub fn into_inner(self) -> Vec<HashMap<&'static str, Cow<'a, str>>> {
+        self.json
     }
 }
 
-impl<'a, 'input: 'a, W> Visitor<'a, 'input> for SingleEmitter<'input, W>
-where
-    W: Write,
+impl<'a, 'input: 'a> Visitor<'a, 'input> for SingleGenerator<'a>
 {
     fn visit_folder_empty(&mut self, f: &'a Folder<'input>) -> Result<(), Error<'static>> {
         unimplemented!()
@@ -44,7 +39,14 @@ where
     }
 
     fn visit_note(&mut self, n: &'a Note<'input>) -> Result<(), Error<'static>> {
-        unimplemented!()
+        let mut entry = HashMap::new();
+
+        entry.insert("text", Cow::Borrowed(n.contents.unwrap_or("")));
+        entry.insert("uuid", Cow::Owned(n.uuid.to_string()));
+
+        self.json.push(entry);
+
+        Ok(())
     }
 
     fn visit_root_pre(&mut self, hl: &'a Hotlist<'input>) -> Result<(), Error<'static>> {

@@ -88,15 +88,14 @@ fn main() {
             );
         }
         OutputFormat::TiddlerJson => {
-            println!(
-                "Error while writing Tiddler JSON file {}:",
-                &args.output.unwrap_or("to stdout".to_string())
-            );
-            error::print_error_and_exit(
-                "tiddlerjson output not yet implemented".into(),
-                &args.path,
-                4,
-            );
+            gen::emit_hotlist_as_tiddler_json((&args.output).as_ref(), &hotlist, args.multiple)
+                .unwrap_or_else(|e| {
+                    println!(
+                        "Error while writing Tiddler JSON file {}:",
+                        &args.output.unwrap_or("to stdout".to_string())
+                    );
+                    error::print_error_and_exit(e, &args.path, 4);
+                });
         }
         OutputFormat::WikiText => {
             println!(
