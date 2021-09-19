@@ -1,7 +1,9 @@
 mod html;
+mod tiddler_json;
 
 // Re-exports
 pub use html::emit as emit_hotlist_as_html;
+pub use tiddler_json::emit as emit_hotlist_as_tiddler_json;
 
 // Imports
 use crate::ast::{EntryKind, Folder, Hotlist, Note};

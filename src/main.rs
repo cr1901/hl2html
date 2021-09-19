@@ -32,6 +32,7 @@ struct HotlistArgs {
 enum OutputFormat {
     Html,
     Markdown,
+    TiddlerJson,
     WikiText,
 }
 
@@ -39,9 +40,10 @@ fn output_format(f: &str) -> Result<OutputFormat, String> {
     match f {
         "html" => Ok(OutputFormat::Html),
         "markdown" => Ok(OutputFormat::Markdown),
+        "tiddlerjson" => Ok(OutputFormat::TiddlerJson),
         "wikitext" => Ok(OutputFormat::WikiText),
         _ => Err(String::from(
-            "unknown output format (html, markdown, wikitext)",
+            "unknown output format (html, markdown, tiddlerjson, wikitext)",
         )),
     }
 }
@@ -85,6 +87,17 @@ fn main() {
                 3,
             );
         }
+        OutputFormat::TiddlerJson => {
+            println!(
+                "Error while writing Tiddler JSON file {}:",
+                &args.output.unwrap_or("to stdout".to_string())
+            );
+            error::print_error_and_exit(
+                "tiddlerjson output not yet implemented".into(),
+                &args.path,
+                4,
+            );
+        }
         OutputFormat::WikiText => {
             println!(
                 "Error while writing WikiText file {}:",
@@ -93,7 +106,7 @@ fn main() {
             error::print_error_and_exit(
                 "wikitext output not yet implemented".into(),
                 &args.path,
-                4,
+                5,
             );
         }
     }
