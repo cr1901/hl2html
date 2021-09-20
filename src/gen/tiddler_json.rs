@@ -173,7 +173,8 @@ impl<'a> ser::Formatter for TiddlerJsonEscapeWrite<'a> {
         // We didn't get two control chars in a row, so write the buffered control char out and
         // keep going.
         if self.possible_newline {
-            self.inner.write_char_escape(writer, ser::CharEscape::AsciiControl(0x02))?;
+            self.inner
+                .write_char_escape(writer, ser::CharEscape::AsciiControl(0x02))?;
             self.possible_newline = false;
         }
 
@@ -193,14 +194,12 @@ impl<'a> ser::Formatter for TiddlerJsonEscapeWrite<'a> {
                 self.inner.write_string_fragment(writer, r"\n")?;
                 self.possible_newline = false;
                 Ok(())
-            },
+            }
             ser::CharEscape::AsciiControl(a) if a == 0x02 && !self.possible_newline => {
                 self.possible_newline = true;
                 Ok(())
-            },
-            _ => {
-                self.inner.write_char_escape(writer, char_escape)
             }
+            _ => self.inner.write_char_escape(writer, char_escape),
         }
     }
 
