@@ -23,7 +23,7 @@ impl<'arena, 'input> Serialize for StringRefs<'arena, 'input> {
     {
         match self {
             StringRefs::Input(s) => s.serialize(serializer),
-            StringRefs::Arena(a) => a.serialize(serializer)
+            StringRefs::Arena(a) => a.serialize(serializer),
         }
     }
 }
@@ -31,7 +31,7 @@ impl<'arena, 'input> Serialize for StringRefs<'arena, 'input> {
 pub struct SingleGenerator<'arena, 'input> {
     json: Vec<HashMap<&'static str, StringRefs<'arena, 'input>>>,
     root: PathBuf,
-    arena: &'arena Bump
+    arena: &'arena Bump,
 }
 
 impl<'arena, 'input> Serialize for SingleGenerator<'arena, 'input> {
