@@ -18,7 +18,10 @@ trait Visitor<'a, 'input: 'a> {
     fn visit_root_post(&mut self, hotlist: &'a Hotlist<'input>) -> Result<(), Error<'static>>;
 }
 
-fn traverse_hotlist<'a, 'input: 'a, V: Visitor<'a, 'input>>(hl: &'a Hotlist<'input>, visitor: &mut V) -> Result<(), Error<'static>> {
+fn traverse_hotlist<'a, 'input: 'a, V: Visitor<'a, 'input>>(
+    hl: &'a Hotlist<'input>,
+    visitor: &mut V,
+) -> Result<(), Error<'static>> {
     visitor.visit_root_pre(&hl)?;
 
     let mut stack = Vec::<&EntryKind>::new();

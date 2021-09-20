@@ -140,7 +140,7 @@ Number of Entries: {}
     }
 }
 
-impl<'a, 'input: 'a>  Visitor<'a, 'input>  for MultiEmitter {
+impl<'a, 'input: 'a> Visitor<'a, 'input> for MultiEmitter {
     fn visit_folder_empty(&mut self, f: &'a Folder<'input>) -> Result<(), Error<'static>> {
         self.root.push(f.name);
         create_dir_all(&self.root)?;

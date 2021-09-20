@@ -7,17 +7,14 @@ use std::collections::HashMap;
 use std::io::Write;
 use std::path::PathBuf;
 
-
-pub struct SingleGenerator<'a>
-{
+pub struct SingleGenerator<'a> {
     json: Vec<HashMap<&'static str, Cow<'a, str>>>,
     root: PathBuf,
 }
 
-impl<'a> SingleGenerator<'a>
-{
+impl<'a> SingleGenerator<'a> {
     pub fn new() -> Self {
-        let json = Vec::<HashMap::<&'static str, Cow<'a, str>>>::new();
+        let json = Vec::<HashMap<&'static str, Cow<'a, str>>>::new();
         let root = PathBuf::new();
         Self { json, root }
     }
@@ -27,8 +24,7 @@ impl<'a> SingleGenerator<'a>
     }
 }
 
-impl<'a, 'input: 'a> Visitor<'a, 'input> for SingleGenerator<'a>
-{
+impl<'a, 'input: 'a> Visitor<'a, 'input> for SingleGenerator<'a> {
     fn visit_folder_empty(&mut self, _f: &'a Folder<'input>) -> Result<(), Error<'static>> {
         Ok(())
     }
@@ -50,7 +46,10 @@ impl<'a, 'input: 'a> Visitor<'a, 'input> for SingleGenerator<'a>
 
         // Hotlist-specific
         entry.insert("uuid", Cow::Owned(n.uuid.to_string()));
-        entry.insert("folder", Cow::Owned(self.root.to_str().unwrap_or("").to_owned()));
+        entry.insert(
+            "folder",
+            Cow::Owned(self.root.to_str().unwrap_or("").to_owned()),
+        );
 
         self.json.push(entry);
 
