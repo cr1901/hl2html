@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 argh = "0.1.5"
+bumpalo = { version = "3.7.1", features = ["collections"] }
 eyre = "0.6.5"
 lalrpop-util = "0.19.6"
 lexgen = "0.4.0"

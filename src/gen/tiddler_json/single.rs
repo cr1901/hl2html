@@ -7,24 +7,51 @@ use std::collections::HashMap;
 use std::io::Write;
 use std::path::PathBuf;
 
-pub struct SingleGenerator<'a> {
-    json: Vec<HashMap<&'static str, Cow<'a, str>>>,
+use bumpalo::Bump;
+use serde::{Serialize, Serializer};
+
+#[derive(Debug)]
+enum StringRefs<'arena, 'input> {
+    Input(&'input str),
+    Arena(bumpalo::collections::String<'arena>),
+}
+
+impl<'arena, 'input> Serialize for StringRefs<'arena, 'input> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            StringRefs::Input(s) => s.serialize(serializer),
+            StringRefs::Arena(a) => a.serialize(serializer)
+        }
+    }
+}
+
+pub struct SingleGenerator<'arena, 'input> {
+    json: Vec<HashMap<&'static str, StringRefs<'arena, 'input>>>,
     root: PathBuf,
+    arena: &'arena Bump
 }
 
-impl<'a> SingleGenerator<'a> {
-    pub fn new() -> Self {
-        let json = Vec::<HashMap<&'static str, Cow<'a, str>>>::new();
+impl<'arena, 'input> Serialize for SingleGenerator<'arena, 'input> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.json.serialize(serializer)
+    }
+}
+
+impl<'arena, 'input> SingleGenerator<'arena, 'input> {
+    pub fn new(arena: &'arena Bump) -> Self {
+        let json = Vec::<HashMap<&'static str, StringRefs>>::new();
         let root = PathBuf::new();
-        Self { json, root }
-    }
-
-    pub fn into_inner(self) -> Vec<HashMap<&'static str, Cow<'a, str>>> {
-        self.json
+        Self { json, root, arena }
     }
 }
 
-impl<'a, 'input: 'a> Visitor<'a, 'input> for SingleGenerator<'a> {
+impl<'a, 'arena, 'input: 'a> Visitor<'a, 'input> for SingleGenerator<'arena, 'input> {
     fn visit_folder_empty(&mut self, _f: &'a Folder<'input>) -> Result<(), Error<'static>> {
         Ok(())
     }
@@ -42,14 +69,19 @@ impl<'a, 'input: 'a> Visitor<'a, 'input> for SingleGenerator<'a> {
     fn visit_note(&mut self, n: &'a Note<'input>) -> Result<(), Error<'static>> {
         let mut entry = HashMap::new();
 
-        entry.insert("text", Cow::Borrowed(n.contents.unwrap_or("")));
+        entry.insert("text", StringRefs::Input(n.contents.unwrap_or("")));
 
         // Hotlist-specific
-        entry.insert("uuid", Cow::Owned(n.uuid.to_string()));
-        entry.insert(
-            "folder",
-            Cow::Owned(self.root.to_str().unwrap_or("").to_owned()),
-        );
+        let uuid = bumpalo::format!(in &self.arena, "{}", n.uuid.to_hyphenated_ref());
+        entry.insert("uuid", StringRefs::Arena(uuid));
+
+        // let folder = bumpalo::format!(in &self.arena, "{}", self.root);
+
+        // let
+        // entry.insert(
+        //     "folder",
+        //     Cow::Owned(self.root.to_string_lossy().to_string()),
+        // );
 
         self.json.push(entry);
 

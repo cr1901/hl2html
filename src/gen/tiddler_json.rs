@@ -9,7 +9,8 @@ use std::fs::File;
 use std::io::{self, BufWriter, Write};
 use std::path::Path;
 
-use serde::Serialize;
+use bumpalo::Bump;
+
 use serde_json::to_writer_pretty;
 
 pub fn emit<T: AsRef<Path>>(
@@ -28,9 +29,11 @@ pub fn emit<T: AsRef<Path>>(
             Box::new(BufWriter::new(io::stdout()))
         };
 
-        let mut gen = SingleGenerator::new();
+        let bump = Bump::new();
+        let mut gen = SingleGenerator::new(&bump);
+
         traverse_hotlist(hl, &mut gen)?;
-        let mut emitter = to_writer_pretty(out_handle, &gen.into_inner())?;
+        to_writer_pretty(out_handle, &gen)?;
     }
 
     Ok(())
