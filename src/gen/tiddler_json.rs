@@ -12,7 +12,7 @@ use std::path::Path;
 use bumpalo::Bump;
 
 use serde::Serialize;
-use serde_json::{ser, to_writer_pretty};
+use serde_json::ser;
 
 pub fn emit<T: AsRef<Path>>(
     filename: Option<T>,

@@ -21,17 +21,17 @@ pub Hotlist: ast::Hotlist<'input> = {
     }
 }
 
-pub(crate) HotlistHeader: (RefVersion<'input>, ast::Options<'input>) = {
+pub(in crate::parser) HotlistHeader: (RefVersion<'input>, ast::Options<'input>) = {
     <version:HotlistVersion> <options:HotlistOptions> => {
         (version, options)
     }
 }
 
-pub(crate) HotlistVersion: RefVersion<'input> = {
+pub(in crate::parser) HotlistVersion: RefVersion<'input> = {
     "Opera Hotlist version" <v:Version> => v
 };
 
-pub(crate) HotlistOptions: ast::Options<'input> = {
+pub(in crate::parser) HotlistOptions: ast::Options<'input> = {
     <lo:@L> "Options:" <vo:SingleOp*> <hi:@R> =>? {
         let mut encoding: Option<ast::Encoding> = None;
 
@@ -58,13 +58,13 @@ pub(crate) HotlistOptions: ast::Options<'input> = {
     }
 }
 
-pub(crate) HotlistEntries: Vec<ast::EntryKind<'input>> = {
+pub(in crate::parser) HotlistEntries: Vec<ast::EntryKind<'input>> = {
     <ve:SingleEntry*> => {
         ve
     }
 }
 
-pub(crate) SingleOp: ast::SingleOp<'input> = {
+pub(in crate::parser) SingleOp: ast::SingleOp<'input> = {
     "encoding" "=" <enc:Encoding> "," "version" "=" <v:Version> => {
         let encv = match enc {
             ast::Encoding::Utf8(_) => ast::Encoding::Utf8(v)
@@ -82,7 +82,7 @@ SingleEntry: ast::EntryKind<'input> = {
     }
 }
 
-pub(crate) NoteEntry: ast::Note<'input> = {
+pub(in crate::parser) NoteEntry: ast::Note<'input> = {
     <lo:@L> "#NOTE" <nfv:NoteField*> <hi:@R> =>? {
         let mut id: Option<u32> = None;
         let mut uuid: Option<Uuid> = None;

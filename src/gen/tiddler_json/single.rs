@@ -2,9 +2,7 @@ use crate::ast::{Folder, Hotlist, Note};
 use crate::error::Error;
 use crate::gen::Visitor;
 
-use std::borrow::Cow;
 use std::collections::HashMap;
-use std::io::Write;
 use std::path::PathBuf;
 
 use bumpalo::Bump;

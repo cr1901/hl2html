@@ -8,7 +8,10 @@ use std::io::BufReader;
 use std::path::Path;
 
 use lalrpop_util::lalrpop_mod;
-lalrpop_mod!(pub hotlist); // synthesized by LALRPOP
+lalrpop_mod!(
+    #[cfg_attr(not(test), allow(dead_code, unused_imports))]
+    pub hotlist
+); // synthesized by LALRPOP
 
 pub struct LineInfo {
     pub line: usize,
