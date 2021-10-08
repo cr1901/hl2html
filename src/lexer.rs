@@ -167,16 +167,8 @@ lexer! {
                 let match_ = lexer.match_();
                 lexer.state().in_note_name = false;
 
-                // We don't want to match CR either, but only if it precedes a \n.
-                let match_end = if match_.rfind('\r') == Some(match_.len() - 1) {
-                    match_.len() - 2
-                } else {
-                    match_.len() - 1
-                };
-
-                // For some reason the equal sign remains, so we remove it here.
                 // TODO: Handle empty slice.
-                lexer.switch_and_return(LexerRule::Init, Tok::NoteBody(&match_[1..=match_end]))
+                lexer.switch_and_return(LexerRule::Init, Tok::NoteBody(&match_))
             } else {
                 lexer.continue_()
             }
