@@ -25,7 +25,7 @@ where
     }
 }
 
-impl<'a, 'input: 'a, W> Visitor<'a, 'input> for SingleEmitter<W>
+impl<'a, 'input, W> Visitor<'a, 'input> for SingleEmitter<W>
 where
     W: Write,
 {

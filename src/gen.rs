@@ -9,7 +9,7 @@ pub use tiddler_json::emit as emit_hotlist_as_tiddler_json;
 use crate::ast::{EntryKind, Folder, Hotlist, Note};
 use crate::error::Error;
 
-trait Visitor<'a, 'input: 'a> {
+trait Visitor<'a, 'input> {
     fn visit_folder_empty(&mut self, folder: &'a Folder<'input>) -> Result<(), Error<'static>>;
     fn visit_folder_pre(&mut self, folder: &'a Folder<'input>) -> Result<(), Error<'static>>;
     fn visit_folder_post(&mut self, folder: &'a Folder<'input>) -> Result<(), Error<'static>>;
@@ -18,7 +18,7 @@ trait Visitor<'a, 'input: 'a> {
     fn visit_root_post(&mut self, hotlist: &'a Hotlist<'input>) -> Result<(), Error<'static>>;
 }
 
-fn traverse_hotlist<'a, 'input: 'a, V: Visitor<'a, 'input>>(
+fn traverse_hotlist<'a, 'input, V: Visitor<'a, 'input>>(
     hl: &'a Hotlist<'input>,
     visitor: &mut V,
 ) -> Result<(), Error<'static>> {

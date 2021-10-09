@@ -49,7 +49,7 @@ impl<'arena, 'input> SingleGenerator<'arena, 'input> {
     }
 }
 
-impl<'a, 'arena, 'input: 'a> Visitor<'a, 'input> for SingleGenerator<'arena, 'input> {
+impl<'a, 'arena, 'input> Visitor<'a, 'input> for SingleGenerator<'arena, 'input> {
     fn visit_folder_empty(&mut self, _f: &'a Folder<'input>) -> Result<(), Error<'static>> {
         Ok(())
     }
