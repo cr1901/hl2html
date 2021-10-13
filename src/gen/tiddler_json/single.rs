@@ -31,7 +31,7 @@ pub struct SingleGenerator<'arena, 'input> {
     json: Vec<HashMap<&'static str, StringRefs<'arena, 'input>>>,
     root: PathBuf,
     arena: &'arena Bump,
-    now: DateTime<Utc>
+    now: DateTime<Utc>,
 }
 
 impl<'arena, 'input> Serialize for SingleGenerator<'arena, 'input> {
@@ -48,7 +48,12 @@ impl<'arena, 'input> SingleGenerator<'arena, 'input> {
         let json = Vec::<HashMap<&'static str, StringRefs>>::new();
         let root = PathBuf::new();
         let now = Utc::now();
-        Self { json, root, arena, now }
+        Self {
+            json,
+            root,
+            arena,
+            now,
+        }
     }
 }
 
@@ -119,6 +124,26 @@ impl<'a, 'arena, 'input> Visitor<'a, 'input> for SingleGenerator<'arena, 'input>
     }
 
     fn visit_root_post(&mut self, _hl: &'a Hotlist<'input>) -> Result<(), Error<'static>> {
+        // The final, main tiddler is the landing page.
+        let mut entry = HashMap::new();
+
+        entry.insert("title", StringRefs::Input("Opera Notes"));
+        entry.insert(
+            "text",
+            StringRefs::Input(
+                "<$list filter=\"[tag[opera]nsort[id]]\">\n<$link/> ({{!!url}})<br/>\n</$list>",
+            ),
+        );
+        entry.insert("tags", StringRefs::Input("opera"));
+
+        let now = bumpalo::format!(in &self.arena, "{}", self.now.format("%Y%m%d%H%M%S%3f"));
+        entry.insert("created", StringRefs::Arena(now.clone()));
+        entry.insert("modified", StringRefs::Arena(now.clone()));
+
+        entry.insert("commit-sha", StringRefs::Input(env!("VERGEN_GIT_SHA")));
+
+        self.json.push(entry);
+
         Ok(())
     }
 }
