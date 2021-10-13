@@ -163,14 +163,16 @@ lexer! {
     // Chomp characters until a newline is found!
     rule NoteBody {
         _ => |mut lexer| {
-            if let Some('\n') = lexer.peek() {
-                let match_ = lexer.match_();
-                lexer.state().in_note_name = false;
+            match lexer.peek() {
+                // FIXME: Explicitly handle carriage return not followed by newline?
+                Some('\n') | Some('\r') => {
+                    let match_ = lexer.match_();
+                    lexer.state().in_note_name = false;
 
-                // TODO: Handle empty slice.
-                lexer.switch_and_return(LexerRule::Init, Tok::NoteBody(&match_))
-            } else {
-                lexer.continue_()
+                    // TODO: Handle empty slice.
+                    lexer.switch_and_return(LexerRule::Init, Tok::NoteBody(&match_))
+                },
+                _ => lexer.continue_()
             }
         },
     }
