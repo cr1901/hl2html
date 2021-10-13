@@ -73,13 +73,30 @@ impl<'a, 'arena, 'input> Visitor<'a, 'input> for SingleGenerator<'arena, 'input>
         let uuid = bumpalo::format!(in &self.arena, "{}", n.uuid.to_hyphenated_ref());
         entry.insert("uuid", StringRefs::Arena(uuid));
 
-        // let folder = bumpalo::format!(in &self.arena, "{}", self.root);
+        let time = bumpalo::format!(in &self.arena, "{}", n.timestamp.format("%Y%m%d%H%M%S%3f"));
+        entry.insert("created", StringRefs::Arena(time.clone()));
+        entry.insert("modified", StringRefs::Arena(time));
+        entry.insert("tags", StringRefs::Input("opera"));
 
-        // let
-        // entry.insert(
-        //     "folder",
-        //     Cow::Owned(self.root.to_string_lossy().to_string()),
-        // );
+        let id = bumpalo::format!(in &self.arena, "{}", n.id);
+
+        let url = match &n.url {
+            Some(u) => {
+                bumpalo::format!(in &self.arena, "{}", u)
+            },
+            None =>  {
+                bumpalo::collections::String::from_str_in("None", &self.arena)
+            }
+        };
+
+        // TODO: When building the landing page, show URL for each entry but truncate to
+        // a reasonable number of characters.
+        let title = bumpalo::format!(in &self.arena, "Note {}", id);
+        entry.insert("title", StringRefs::Arena(title));
+        entry.insert("url", StringRefs::Arena(url));
+        entry.insert("id", StringRefs::Arena(id));
+
+        // let folder = bumpalo::format!(in &self.arena, "{}", self.root);
 
         self.json.push(entry);
 
