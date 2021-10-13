@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use bumpalo::Bump;
+use chrono::{DateTime, Utc};
 use serde::{Serialize, Serializer};
 
 #[derive(Debug)]
@@ -30,6 +31,7 @@ pub struct SingleGenerator<'arena, 'input> {
     json: Vec<HashMap<&'static str, StringRefs<'arena, 'input>>>,
     root: PathBuf,
     arena: &'arena Bump,
+    now: DateTime<Utc>
 }
 
 impl<'arena, 'input> Serialize for SingleGenerator<'arena, 'input> {
@@ -45,7 +47,8 @@ impl<'arena, 'input> SingleGenerator<'arena, 'input> {
     pub fn new(arena: &'arena Bump) -> Self {
         let json = Vec::<HashMap<&'static str, StringRefs>>::new();
         let root = PathBuf::new();
-        Self { json, root, arena }
+        let now = Utc::now();
+        Self { json, root, arena, now }
     }
 }
 
@@ -74,8 +77,11 @@ impl<'a, 'arena, 'input> Visitor<'a, 'input> for SingleGenerator<'arena, 'input>
         entry.insert("uuid", StringRefs::Arena(uuid));
 
         let time = bumpalo::format!(in &self.arena, "{}", n.timestamp.format("%Y%m%d%H%M%S%3f"));
-        entry.insert("created", StringRefs::Arena(time.clone()));
-        entry.insert("modified", StringRefs::Arena(time));
+        entry.insert("timestamp", StringRefs::Arena(time));
+
+        let now = bumpalo::format!(in &self.arena, "{}", self.now.format("%Y%m%d%H%M%S%3f"));
+        entry.insert("created", StringRefs::Arena(now.clone()));
+        entry.insert("modified", StringRefs::Arena(now.clone()));
         entry.insert("tags", StringRefs::Input("opera"));
 
         let id = bumpalo::format!(in &self.arena, "{}", n.id);
@@ -83,10 +89,8 @@ impl<'a, 'arena, 'input> Visitor<'a, 'input> for SingleGenerator<'arena, 'input>
         let url = match &n.url {
             Some(u) => {
                 bumpalo::format!(in &self.arena, "{}", u)
-            },
-            None =>  {
-                bumpalo::collections::String::from_str_in("None", &self.arena)
             }
+            None => bumpalo::collections::String::from_str_in("None", &self.arena),
         };
 
         // TODO: When building the landing page, show URL for each entry but truncate to
@@ -96,7 +100,14 @@ impl<'a, 'arena, 'input> Visitor<'a, 'input> for SingleGenerator<'arena, 'input>
         entry.insert("url", StringRefs::Arena(url));
         entry.insert("id", StringRefs::Arena(id));
 
-        // let folder = bumpalo::format!(in &self.arena, "{}", self.root);
+        let folder = bumpalo::format!(in &self.arena,
+         "{}", self.root
+                   .to_str()
+                   .ok_or(format!("invalid path: {}",
+                                  self.root.to_string_lossy()))?
+        );
+        entry.insert("folder", StringRefs::Arena(folder));
+        entry.insert("commit-sha", StringRefs::Input(env!("VERGEN_GIT_SHA")));
 
         self.json.push(entry);
 

@@ -22,3 +22,4 @@ version-compare = "0.0.10"
 
 [build-dependencies]
 lalrpop = { version = "0.19.6", git = "https://github.com/lalrpop/lalrpop", rev = "d09a143" }
+vergen = { version = "5", default-features = false, features = ["git"] }
