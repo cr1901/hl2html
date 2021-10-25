@@ -48,6 +48,7 @@ pub fn emit<T: AsRef<Path>>(
 // TODO: Nominally, I don't want Serialize to be implemented for these types when a Serializer's
 // collect_str implementation heap-allocates, but I'm not sure how to constrain to "only implement
 // for specific serializers" at this time.
+#[derive(Debug)]
 struct Uuid(uuid::Uuid);
 
 impl Serialize for Uuid {
@@ -65,6 +66,7 @@ impl From<uuid::Uuid> for Uuid {
     }
 }
 
+#[derive(Debug)]
 struct DateTime(chrono::DateTime<Utc>);
 
 impl Serialize for DateTime {

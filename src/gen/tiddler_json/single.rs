@@ -13,6 +13,9 @@ use serde::{Serialize, Serializer};
 enum StringRefs<'arena, 'input> {
     Input(&'input str),
     Arena(bumpalo::collections::String<'arena>),
+    DateTime(super::DateTime),
+    Id(u32),
+    Uuid(super::Uuid)
 }
 
 impl<'arena, 'input> Serialize for StringRefs<'arena, 'input> {
@@ -23,6 +26,9 @@ impl<'arena, 'input> Serialize for StringRefs<'arena, 'input> {
         match self {
             StringRefs::Input(s) => s.serialize(serializer),
             StringRefs::Arena(a) => a.serialize(serializer),
+            StringRefs::DateTime(d) => d.serialize(serializer),
+            StringRefs::Id(i) => i.serialize(serializer),
+            StringRefs::Uuid(u) => u.serialize(serializer),
         }
     }
 }
@@ -78,18 +84,13 @@ impl<'a, 'arena, 'input> Visitor<'a, 'input> for SingleGenerator<'arena, 'input>
         entry.insert("text", StringRefs::Input(n.contents.unwrap_or("")));
 
         // Hotlist-specific
-        let uuid = bumpalo::format!(in &self.arena, "{}", n.uuid.to_hyphenated_ref());
-        entry.insert("uuid", StringRefs::Arena(uuid));
+        entry.insert("uuid", StringRefs::Uuid(n.uuid.into()));
 
-        let time = bumpalo::format!(in &self.arena, "{}", n.timestamp.format("%Y%m%d%H%M%S%3f"));
-        entry.insert("timestamp", StringRefs::Arena(time));
+        entry.insert("timestamp", StringRefs::DateTime(n.timestamp.into()));
 
-        let now = bumpalo::format!(in &self.arena, "{}", self.now.format("%Y%m%d%H%M%S%3f"));
-        entry.insert("created", StringRefs::Arena(now.clone()));
-        entry.insert("modified", StringRefs::Arena(now.clone()));
+        entry.insert("created", StringRefs::DateTime(self.now.into()));
+        entry.insert("modified", StringRefs::DateTime(self.now.into()));
         entry.insert("tags", StringRefs::Input("opera"));
-
-        let id = bumpalo::format!(in &self.arena, "{}", n.id);
 
         let url = match &n.url {
             Some(u) => {
@@ -100,10 +101,10 @@ impl<'a, 'arena, 'input> Visitor<'a, 'input> for SingleGenerator<'arena, 'input>
 
         // TODO: When building the landing page, show URL for each entry but truncate to
         // a reasonable number of characters.
-        let title = bumpalo::format!(in &self.arena, "Note {}", id);
+        let title = bumpalo::format!(in &self.arena, "Note {}", n.id);
         entry.insert("title", StringRefs::Arena(title));
         entry.insert("url", StringRefs::Arena(url));
-        entry.insert("id", StringRefs::Arena(id));
+        entry.insert("id", StringRefs::Id(n.id));
 
         let folder = bumpalo::format!(in &self.arena,
          "{}", self.root
@@ -136,9 +137,8 @@ impl<'a, 'arena, 'input> Visitor<'a, 'input> for SingleGenerator<'arena, 'input>
         );
         entry.insert("tags", StringRefs::Input("opera"));
 
-        let now = bumpalo::format!(in &self.arena, "{}", self.now.format("%Y%m%d%H%M%S%3f"));
-        entry.insert("created", StringRefs::Arena(now.clone()));
-        entry.insert("modified", StringRefs::Arena(now.clone()));
+        entry.insert("created", StringRefs::DateTime(self.now.into()));
+        entry.insert("modified", StringRefs::DateTime(self.now.into()));
 
         entry.insert("commit-sha", StringRefs::Input(env!("VERGEN_GIT_SHA")));
 
