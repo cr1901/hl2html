@@ -10,7 +10,7 @@ use serde::{Serialize, Serializer};
 
 #[derive(Debug)]
 enum SerializeType<'input> {
-    Input(&'input str),
+    Str(&'input str),
     DateTime(super::DateTime),
     NoteBody(super::NoteBody<'input>),
     Title(super::Title),
@@ -25,7 +25,7 @@ impl<'input> Serialize for SerializeType<'input> {
         S: Serializer,
     {
         match self {
-            SerializeType::Input(s) => s.serialize(serializer),
+            SerializeType::Str(s) => s.serialize(serializer),
             SerializeType::DateTime(d) => d.serialize(serializer),
             SerializeType::NoteBody(n) => n.serialize(serializer),
             SerializeType::Title(t) => t.serialize(serializer),
@@ -91,7 +91,7 @@ impl<'a, 'input> Visitor<'a, 'input> for SingleGenerator<'input> {
 
         entry.insert("created", SerializeType::DateTime(self.now.into()));
         entry.insert("modified", SerializeType::DateTime(self.now.into()));
-        entry.insert("tags", SerializeType::Input("opera"));
+        entry.insert("tags", SerializeType::Str("opera"));
 
         // TODO: When building the landing page, show URL for each entry but truncate to
         // a reasonable number of characters.
@@ -99,7 +99,7 @@ impl<'a, 'input> Visitor<'a, 'input> for SingleGenerator<'input> {
         entry.insert("url", SerializeType::Url(n.url.clone().into()));
         entry.insert("id", SerializeType::U32(n.id));
 
-        entry.insert("commit-sha", SerializeType::Input(env!("VERGEN_GIT_SHA")));
+        entry.insert("commit-sha", SerializeType::Str(env!("VERGEN_GIT_SHA")));
 
         self.json.push(entry);
 
@@ -114,19 +114,19 @@ impl<'a, 'input> Visitor<'a, 'input> for SingleGenerator<'input> {
         // The final, main tiddler is the landing page.
         let mut entry = HashMap::new();
 
-        entry.insert("title", SerializeType::Input("Opera Notes"));
+        entry.insert("title", SerializeType::Str("Opera Notes"));
         entry.insert(
             "text",
-            SerializeType::Input(
+            SerializeType::Str(
                 "<$list filter=\"[tag[opera]nsort[id]]\">\n<$link/> ({{!!url}})<br/>\n</$list>",
             ),
         );
-        entry.insert("tags", SerializeType::Input("opera"));
+        entry.insert("tags", SerializeType::Str("opera"));
 
         entry.insert("created", SerializeType::DateTime(self.now.into()));
         entry.insert("modified", SerializeType::DateTime(self.now.into()));
 
-        entry.insert("commit-sha", SerializeType::Input(env!("VERGEN_GIT_SHA")));
+        entry.insert("commit-sha", SerializeType::Str(env!("VERGEN_GIT_SHA")));
 
         self.json.push(entry);
 
