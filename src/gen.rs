@@ -9,17 +9,17 @@ pub use tiddler_json::emit as emit_hotlist_as_tiddler_json;
 use crate::ast::{EntryKind, Folder, Hotlist, Note};
 use crate::error::Error;
 
-trait Visitor<'a, 'input> {
-    fn visit_folder_empty(&mut self, folder: &'a Folder<'input>) -> Result<(), Error<'static>>;
-    fn visit_folder_pre(&mut self, folder: &'a Folder<'input>) -> Result<(), Error<'static>>;
-    fn visit_folder_post(&mut self, folder: &'a Folder<'input>) -> Result<(), Error<'static>>;
-    fn visit_note(&mut self, note: &'a Note<'input>) -> Result<(), Error<'static>>;
-    fn visit_root_pre(&mut self, hotlist: &'a Hotlist<'input>) -> Result<(), Error<'static>>;
-    fn visit_root_post(&mut self, hotlist: &'a Hotlist<'input>) -> Result<(), Error<'static>>;
+trait Visitor<'ast, 'input> {
+    fn visit_folder_empty(&mut self, folder: &'ast Folder<'input>) -> Result<(), Error<'static>>;
+    fn visit_folder_pre(&mut self, folder: &'ast Folder<'input>) -> Result<(), Error<'static>>;
+    fn visit_folder_post(&mut self, folder: &'ast Folder<'input>) -> Result<(), Error<'static>>;
+    fn visit_note(&mut self, note: &'ast Note<'input>) -> Result<(), Error<'static>>;
+    fn visit_root_pre(&mut self, hotlist: &'ast Hotlist<'input>) -> Result<(), Error<'static>>;
+    fn visit_root_post(&mut self, hotlist: &'ast Hotlist<'input>) -> Result<(), Error<'static>>;
 }
 
-fn traverse_hotlist<'a, 'input, V: Visitor<'a, 'input>>(
-    hl: &'a Hotlist<'input>,
+fn traverse_hotlist<'ast, 'input, V: Visitor<'ast, 'input>>(
+    hl: &'ast Hotlist<'input>,
     visitor: &mut V,
 ) -> Result<(), Error<'static>> {
     visitor.visit_root_pre(&hl)?;

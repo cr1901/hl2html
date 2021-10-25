@@ -64,22 +64,22 @@ impl<'input> SingleGenerator<'input> {
     }
 }
 
-impl<'a, 'input> Visitor<'a, 'input> for SingleGenerator<'input> {
-    fn visit_folder_empty(&mut self, _f: &'a Folder<'input>) -> Result<(), Error<'static>> {
+impl<'ast, 'input> Visitor<'ast, 'input> for SingleGenerator<'input> {
+    fn visit_folder_empty(&mut self, _f: &'ast Folder<'input>) -> Result<(), Error<'static>> {
         Ok(())
     }
 
-    fn visit_folder_pre(&mut self, f: &'a Folder<'input>) -> Result<(), Error<'static>> {
+    fn visit_folder_pre(&mut self, f: &'ast Folder<'input>) -> Result<(), Error<'static>> {
         self.root.push(f.name);
         Ok(())
     }
 
-    fn visit_folder_post(&mut self, _f: &'a Folder<'input>) -> Result<(), Error<'static>> {
+    fn visit_folder_post(&mut self, _f: &'ast Folder<'input>) -> Result<(), Error<'static>> {
         self.root.pop();
         Ok(())
     }
 
-    fn visit_note(&mut self, n: &'a Note<'input>) -> Result<(), Error<'static>> {
+    fn visit_note(&mut self, n: &'ast Note<'input>) -> Result<(), Error<'static>> {
         let mut entry = HashMap::new();
 
         entry.insert("text", SerializeType::NoteBody(n.contents.unwrap_or("").into()));
@@ -106,11 +106,11 @@ impl<'a, 'input> Visitor<'a, 'input> for SingleGenerator<'input> {
         Ok(())
     }
 
-    fn visit_root_pre(&mut self, _hl: &'a Hotlist<'input>) -> Result<(), Error<'static>> {
+    fn visit_root_pre(&mut self, _hl: &'ast Hotlist<'input>) -> Result<(), Error<'static>> {
         Ok(())
     }
 
-    fn visit_root_post(&mut self, _hl: &'a Hotlist<'input>) -> Result<(), Error<'static>> {
+    fn visit_root_post(&mut self, _hl: &'ast Hotlist<'input>) -> Result<(), Error<'static>> {
         // The final, main tiddler is the landing page.
         let mut entry = HashMap::new();
 
