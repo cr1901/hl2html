@@ -12,6 +12,7 @@ use serde::{Serialize, Serializer};
 enum SerializeType<'input> {
     Str(&'input str),
     DateTime(super::DateTime),
+    Folder(super::Folder),
     NoteBody(super::NoteBody<'input>),
     Title(super::Title),
     U32(u32),
@@ -27,6 +28,7 @@ impl<'input> Serialize for SerializeType<'input> {
         match self {
             SerializeType::Str(s) => s.serialize(serializer),
             SerializeType::DateTime(d) => d.serialize(serializer),
+            SerializeType::Folder(f) => f.serialize(serializer),
             SerializeType::NoteBody(n) => n.serialize(serializer),
             SerializeType::Title(t) => t.serialize(serializer),
             SerializeType::U32(i) => i.serialize(serializer),
@@ -98,6 +100,9 @@ impl<'ast, 'input> Visitor<'ast, 'input> for SingleGenerator<'input> {
         entry.insert("title", SerializeType::Title(n.id.into()));
         entry.insert("url", SerializeType::Url(n.url.clone().into()));
         entry.insert("id", SerializeType::U32(n.id));
+
+        // TODO: Consider using elsa to avoid making many short-lived copies of the path root.
+        entry.insert("folder", SerializeType::Folder(self.root.clone().into()));
 
         entry.insert("commit-sha", SerializeType::Str(env!("VERGEN_GIT_SHA")));
 

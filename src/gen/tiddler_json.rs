@@ -147,15 +147,15 @@ impl<'a> From<&'a str> for NoteBody<'a> {
 }
 
 #[derive(Debug)]
-struct Folder<'a>(&'a PathBuf);
+struct Folder(PathBuf);
 
-impl<'a> fmt::Display for Folder<'a> {
+impl fmt::Display for Folder {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0.to_str().ok_or(fmt::Error)?)
     }
 }
 
-impl<'a> Serialize for Folder<'a> {
+impl Serialize for Folder {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -164,8 +164,8 @@ impl<'a> Serialize for Folder<'a> {
     }
 }
 
-impl<'a> From<&'a PathBuf> for Folder<'a> {
-    fn from(pathbuf: &'a PathBuf) -> Self {
+impl From<PathBuf> for Folder {
+    fn from(pathbuf: PathBuf) -> Self {
         Folder(pathbuf)
     }
 }
