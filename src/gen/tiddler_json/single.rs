@@ -15,7 +15,9 @@ enum SerializeType<'arena, 'input> {
     Arena(bumpalo::collections::String<'arena>),
     DateTime(super::DateTime),
     NoteBody(super::NoteBody<'input>),
+    Title(super::Title),
     U32(u32),
+    Url(super::Url),
     Uuid(super::Uuid)
 }
 
@@ -29,7 +31,9 @@ impl<'arena, 'input> Serialize for SerializeType<'arena, 'input> {
             SerializeType::Arena(a) => a.serialize(serializer),
             SerializeType::DateTime(d) => d.serialize(serializer),
             SerializeType::NoteBody(n) => n.serialize(serializer),
+            SerializeType::Title(t) => t.serialize(serializer),
             SerializeType::U32(i) => i.serialize(serializer),
+            SerializeType::Url(u) => u.serialize(serializer),
             SerializeType::Uuid(u) => u.serialize(serializer),
         }
     }
@@ -94,18 +98,10 @@ impl<'a, 'arena, 'input> Visitor<'a, 'input> for SingleGenerator<'arena, 'input>
         entry.insert("modified", SerializeType::DateTime(self.now.into()));
         entry.insert("tags", SerializeType::Input("opera"));
 
-        let url = match &n.url {
-            Some(u) => {
-                bumpalo::format!(in &self.arena, "{}", u)
-            }
-            None => bumpalo::collections::String::from_str_in("None", &self.arena),
-        };
-
         // TODO: When building the landing page, show URL for each entry but truncate to
         // a reasonable number of characters.
-        let title = bumpalo::format!(in &self.arena, "Note {}", n.id);
-        entry.insert("title", SerializeType::Arena(title));
-        entry.insert("url", SerializeType::Arena(url));
+        entry.insert("title", SerializeType::Title(n.id.into()));
+        entry.insert("url", SerializeType::Url(n.url.clone().into()));
         entry.insert("id", SerializeType::U32(n.id));
 
         let folder = bumpalo::format!(in &self.arena,

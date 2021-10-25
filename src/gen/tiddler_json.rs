@@ -13,6 +13,7 @@ use std::path::{Path, PathBuf};
 use bumpalo::Bump;
 use chrono::{self, Utc};
 use uuid;
+use url;
 
 use serde::{Serialize, Serializer};
 use serde_json::ser;
@@ -168,5 +169,44 @@ impl<'a> Serialize for Folder<'a> {
 impl<'a> From<&'a PathBuf> for Folder<'a> {
     fn from(pathbuf: &'a PathBuf) -> Self {
         Folder(pathbuf)
+    }
+}
+
+#[derive(Debug)]
+struct Url(Option<url::Url>);
+
+impl<'a> Serialize for Url {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match &self.0 {
+            Some(u) => serializer.collect_str(&format_args!("{}", u)),
+            None => serializer.serialize_str("None")
+        }
+    }
+}
+
+impl From<Option<url::Url>> for Url {
+    fn from(url: Option<url::Url>) -> Self {
+        Url(url)
+    }
+}
+
+#[derive(Debug)]
+struct Title(u32);
+
+impl Serialize for Title {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.collect_str(&format_args!("Note {}", self.0))
+    }
+}
+
+impl From<u32> for Title {
+    fn from(id: u32) -> Self {
+        Title(id)
     }
 }
