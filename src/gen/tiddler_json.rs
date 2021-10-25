@@ -10,7 +10,6 @@ use std::fs::File;
 use std::io::{self, BufWriter, Write};
 use std::path::{Path, PathBuf};
 
-use bumpalo::Bump;
 use chrono::{self, Utc};
 use uuid;
 use url;
@@ -34,8 +33,7 @@ pub fn emit<T: AsRef<Path>>(
             Box::new(BufWriter::new(io::stdout()))
         };
 
-        let bump = Bump::new();
-        let mut gen = SingleGenerator::new(&bump);
+        let mut gen = SingleGenerator::new();
         traverse_hotlist(hl, &mut gen)?;
 
         let mut serializer = serde_json::Serializer::pretty(out_handle);

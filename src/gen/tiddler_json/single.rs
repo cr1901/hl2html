@@ -5,14 +5,12 @@ use crate::gen::Visitor;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use bumpalo::Bump;
 use chrono::{DateTime, Utc};
 use serde::{Serialize, Serializer};
 
 #[derive(Debug)]
-enum SerializeType<'arena, 'input> {
+enum SerializeType<'input> {
     Input(&'input str),
-    Arena(bumpalo::collections::String<'arena>),
     DateTime(super::DateTime),
     NoteBody(super::NoteBody<'input>),
     Title(super::Title),
@@ -21,14 +19,13 @@ enum SerializeType<'arena, 'input> {
     Uuid(super::Uuid)
 }
 
-impl<'arena, 'input> Serialize for SerializeType<'arena, 'input> {
+impl<'input> Serialize for SerializeType<'input> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
         match self {
             SerializeType::Input(s) => s.serialize(serializer),
-            SerializeType::Arena(a) => a.serialize(serializer),
             SerializeType::DateTime(d) => d.serialize(serializer),
             SerializeType::NoteBody(n) => n.serialize(serializer),
             SerializeType::Title(t) => t.serialize(serializer),
@@ -39,14 +36,13 @@ impl<'arena, 'input> Serialize for SerializeType<'arena, 'input> {
     }
 }
 
-pub struct SingleGenerator<'arena, 'input> {
-    json: Vec<HashMap<&'static str, SerializeType<'arena, 'input>>>,
+pub struct SingleGenerator<'input> {
+    json: Vec<HashMap<&'static str, SerializeType<'input>>>,
     root: PathBuf,
-    arena: &'arena Bump,
     now: DateTime<Utc>,
 }
 
-impl<'arena, 'input> Serialize for SingleGenerator<'arena, 'input> {
+impl<'input> Serialize for SingleGenerator<'input> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -55,21 +51,20 @@ impl<'arena, 'input> Serialize for SingleGenerator<'arena, 'input> {
     }
 }
 
-impl<'arena, 'input> SingleGenerator<'arena, 'input> {
-    pub fn new(arena: &'arena Bump) -> Self {
+impl<'input> SingleGenerator<'input> {
+    pub fn new() -> Self {
         let json = Vec::<HashMap<&'static str, SerializeType>>::new();
         let root = PathBuf::new();
         let now = Utc::now();
         Self {
             json,
             root,
-            arena,
             now,
         }
     }
 }
 
-impl<'a, 'arena, 'input> Visitor<'a, 'input> for SingleGenerator<'arena, 'input> {
+impl<'a, 'input> Visitor<'a, 'input> for SingleGenerator<'input> {
     fn visit_folder_empty(&mut self, _f: &'a Folder<'input>) -> Result<(), Error<'static>> {
         Ok(())
     }
@@ -104,13 +99,6 @@ impl<'a, 'arena, 'input> Visitor<'a, 'input> for SingleGenerator<'arena, 'input>
         entry.insert("url", SerializeType::Url(n.url.clone().into()));
         entry.insert("id", SerializeType::U32(n.id));
 
-        let folder = bumpalo::format!(in &self.arena,
-         "{}", self.root
-                   .to_str()
-                   .ok_or(format!("invalid path: {}",
-                                  self.root.to_string_lossy()))?
-        );
-        entry.insert("folder", SerializeType::Arena(folder));
         entry.insert("commit-sha", SerializeType::Input(env!("VERGEN_GIT_SHA")));
 
         self.json.push(entry);
