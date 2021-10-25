@@ -14,6 +14,7 @@ enum SerializeType<'arena, 'input> {
     Input(&'input str),
     Arena(bumpalo::collections::String<'arena>),
     DateTime(super::DateTime),
+    NoteBody(super::NoteBody<'input>),
     U32(u32),
     Uuid(super::Uuid)
 }
@@ -27,6 +28,7 @@ impl<'arena, 'input> Serialize for SerializeType<'arena, 'input> {
             SerializeType::Input(s) => s.serialize(serializer),
             SerializeType::Arena(a) => a.serialize(serializer),
             SerializeType::DateTime(d) => d.serialize(serializer),
+            SerializeType::NoteBody(n) => n.serialize(serializer),
             SerializeType::U32(i) => i.serialize(serializer),
             SerializeType::Uuid(u) => u.serialize(serializer),
         }
@@ -81,7 +83,7 @@ impl<'a, 'arena, 'input> Visitor<'a, 'input> for SingleGenerator<'arena, 'input>
     fn visit_note(&mut self, n: &'a Note<'input>) -> Result<(), Error<'static>> {
         let mut entry = HashMap::new();
 
-        entry.insert("text", SerializeType::Input(n.contents.unwrap_or("")));
+        entry.insert("text", SerializeType::NoteBody(n.contents.unwrap_or("").into()));
 
         // Hotlist-specific
         entry.insert("uuid", SerializeType::Uuid(n.uuid.into()));

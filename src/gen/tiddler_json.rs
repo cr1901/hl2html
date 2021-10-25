@@ -8,7 +8,7 @@ use single::SingleGenerator;
 use std::fmt;
 use std::fs::File;
 use std::io::{self, BufWriter, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use bumpalo::Bump;
 use chrono::{self, Utc};
@@ -84,6 +84,7 @@ impl From<chrono::DateTime<Utc>> for DateTime {
     }
 }
 
+#[derive(Debug)]
 struct NoteBody<'a>(&'a str);
 
 impl<'a> fmt::Display for NoteBody<'a> {
@@ -95,7 +96,7 @@ impl<'a> fmt::Display for NoteBody<'a> {
                     possible_newline = true;
                 }
                 '\x02' if possible_newline => {
-                    write!(f, "</p>\n{:1$}<p>", " ", 4)?;
+                    write!(f, "\n")?;
                     possible_newline = false;
                 }
                 '<' => {
@@ -136,12 +137,36 @@ impl<'a> Serialize for NoteBody<'a> {
     where
         S: Serializer,
     {
-        serializer.collect_str(&format_args!("{}", &self.0))
+        serializer.collect_str(&format_args!("{}", &self))
     }
 }
 
 impl<'a> From<&'a str> for NoteBody<'a> {
     fn from(body: &'a str) -> Self {
         NoteBody(body)
+    }
+}
+
+#[derive(Debug)]
+struct Folder<'a>(&'a PathBuf);
+
+impl<'a> fmt::Display for Folder<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0.to_str().ok_or(fmt::Error)?)
+    }
+}
+
+impl<'a> Serialize for Folder<'a> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.collect_str(&format_args!("{}", &self))
+    }
+}
+
+impl<'a> From<&'a PathBuf> for Folder<'a> {
+    fn from(pathbuf: &'a PathBuf) -> Self {
+        Folder(pathbuf)
     }
 }
