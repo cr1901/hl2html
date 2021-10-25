@@ -5,13 +5,16 @@ use crate::ast::Hotlist;
 use crate::error::Error;
 use single::SingleGenerator;
 
+use std::fmt;
 use std::fs::File;
 use std::io::{self, BufWriter, Write};
 use std::path::Path;
 
 use bumpalo::Bump;
+use chrono::{self, Utc};
+use uuid;
 
-use serde::Serialize;
+use serde::{Serialize, Serializer};
 use serde_json::ser;
 
 pub fn emit<T: AsRef<Path>>(
@@ -40,4 +43,103 @@ pub fn emit<T: AsRef<Path>>(
     }
 
     Ok(())
+}
+
+// TODO: Nominally, I don't want Serialize to be implemented for these types when a Serializer's
+// collect_str implementation heap-allocates, but I'm not sure how to constrain to "only implement
+// for specific serializers" at this time.
+struct Uuid(uuid::Uuid);
+
+impl Serialize for Uuid {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.collect_str(&self.0.to_hyphenated_ref())
+    }
+}
+
+impl From<uuid::Uuid> for Uuid {
+    fn from(uuid: uuid::Uuid) -> Self {
+        Uuid(uuid)
+    }
+}
+
+struct DateTime(chrono::DateTime<Utc>);
+
+impl Serialize for DateTime {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.collect_str(&self.0.format("%Y%m%d%H%M%S%3f"))
+    }
+}
+
+impl From<chrono::DateTime<Utc>> for DateTime {
+    fn from(datetime: chrono::DateTime<Utc>) -> Self {
+        DateTime(datetime)
+    }
+}
+
+struct NoteBody<'a>(&'a str);
+
+impl<'a> fmt::Display for NoteBody<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut possible_newline = false;
+        for c in self.0.chars() {
+            match c {
+                '\x02' if !possible_newline => {
+                    possible_newline = true;
+                }
+                '\x02' if possible_newline => {
+                    write!(f, "</p>\n{:1$}<p>", " ", 4)?;
+                    possible_newline = false;
+                }
+                '<' => {
+                    write!(f, "&lt;")?;
+                }
+                '>' => {
+                    write!(f, "&gt;")?;
+                }
+                '"' => {
+                    write!(f, "&quot;")?;
+                }
+                '&' => {
+                    write!(f, "&amp;")?;
+                }
+                '\'' => {
+                    write!(f, "&apos;")?;
+                }
+                _ => {
+                    write!(f, "{}", c)?;
+                }
+            }
+
+            // We're only interested in matching two \x02 chars back-to-back.
+            match c {
+                '\x02' => {}
+                _ => {
+                    possible_newline = false;
+                }
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl<'a> Serialize for NoteBody<'a> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.collect_str(&format_args!("{}", &self.0))
+    }
+}
+
+impl<'a> From<&'a str> for NoteBody<'a> {
+    fn from(body: &'a str) -> Self {
+        NoteBody(body)
+    }
 }
